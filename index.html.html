@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SM-Planer · Familienpolitik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#1A1A1F;--bg2:#22222A;--bg3:#2C2C37;
+  --card:#25252E;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.15);
+  --text:#EEEDF0;--text2:#A9A8B3;--text3:#6B6A7A;
+  --accent:#4ABA72;--accent-l:rgba(74,186,114,.12);
+  --amber:#E8A04A;--amber-l:rgba(232,160,74,.13);
+  --blue:#5B9FE0;--blue-l:rgba(91,159,224,.13);
+  --red:#E05B5B;--red-l:rgba(224,91,91,.13);
+  --purple:#9B7BE8;--purple-l:rgba(155,123,232,.13);
+  --pink:#E07BB5;--pink-l:rgba(224,123,181,.13);
+  --teal:#4ABCD4;--teal-l:rgba(74,188,212,.13);
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --r:10px;--r-lg:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:17px;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+.shell{display:grid;grid-template-columns:230px 1fr;grid-template-rows:60px 1fr;min-height:100vh;}
+.topbar{grid-column:1/-1;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;}
+.logo{font-family:var(--serif);font-size:1.3rem;letter-spacing:-.01em;}
+.logo em{color:var(--accent);font-style:normal;}
+.logo-sub{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.topbar-right{margin-left:auto;}
+.chip{background:var(--accent-l);color:var(--accent);font-size:.8rem;font-weight:500;padding:4px 12px;border-radius:20px;}
+.sidebar{background:var(--card);border-right:1px solid var(--border);padding:18px 12px;display:flex;flex-direction:column;gap:3px;}
+.nav-sep{font-size:.8rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:500;padding:16px 10px 6px;}
+.nb{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--r);border:none;background:none;cursor:pointer;font-family:var(--sans);font-size:.95rem;color:var(--text2);width:100%;text-align:left;transition:all .14s;}
+.nb:hover{background:var(--bg2);color:var(--text);}
+.nb.on{background:var(--accent-l);color:var(--accent);font-weight:500;}
+.nb svg{width:17px;height:17px;flex-shrink:0;}
+.nbadge{margin-left:auto;font-size:.72rem;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text3);}
+.nbadge.hot{background:var(--amber-l);color:var(--amber);}
+.main{overflow-y:auto;padding:30px 32px;}
+.sec{display:none;}.sec.on{display:block;}
+.ph{margin-bottom:22px;}.ph h1{font-family:var(--serif);font-size:1.9rem;font-weight:400;letter-spacing:-.02em;}.ph p{font-size:.9rem;color:var(--text3);margin-top:3px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);}
+.cp{padding:16px 18px;}
+.btn{padding:9px 18px;border-radius:var(--r);border:1px solid var(--border2);background:none;font-family:var(--sans);font-size:.88rem;color:var(--text2);cursor:pointer;transition:all .12s;}
+.btn:hover{background:var(--bg2);}
+.btn-p{background:var(--accent);color:#fff;border-color:var(--accent);}.btn-p:hover{opacity:.86;}
+.btn-red{color:var(--red);}.btn-red:hover{background:var(--red-l);border-color:var(--red);}
+.btn-sm{padding:4px 10px;font-size:.73rem;}
+.fl{display:flex;flex-direction:column;gap:4px;}
+.lbl{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:500;}
+.inp{padding:9px 12px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);font-family:var(--sans);font-size:.92rem;color:var(--text);width:100%;transition:border-color .12s;}
+.inp:focus{outline:none;border-color:var(--accent);background:var(--card);}
+textarea.inp{resize:vertical;min-height:80px;}
+select.inp{cursor:pointer;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
+.tag{font-size:.72rem;font-weight:500;padding:3px 9px;border-radius:10px;letter-spacing:.02em;}
+.t-familie{background:var(--blue-l);color:var(--blue);}
+.t-kinder{background:var(--accent-l);color:var(--accent);}
+.t-bildung{background:var(--amber-l);color:var(--amber);}
+.t-frauen{background:var(--pink-l);color:var(--pink);}
+.t-soziales{background:var(--purple-l);color:var(--purple);}
+.t-senioren{background:var(--teal-l);color:var(--teal);}
+.t-ostdeutschland{background:rgba(232,160,74,.18);color:var(--amber);}
+
+/* ── CALENDAR TOOLBAR ── */
+.cal-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.cal-toolbar h2{font-family:var(--serif);font-size:1.35rem;font-weight:400;flex:1;}
+.view-toggle{display:flex;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;}
+.vt-btn{padding:7px 16px;border:none;background:none;font-family:var(--sans);font-size:.85rem;color:var(--text2);cursor:pointer;transition:all .12s;}
+.vt-btn.on{background:var(--text);color:var(--bg);}
+
+/* ── PLATFORM FILTER (week view) ── */
+.plat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.pf-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:none;font-family:var(--sans);font-size:.74rem;cursor:pointer;transition:all .12s;color:var(--text2);}
+.pf-btn.on{border-color:currentColor;font-weight:500;}
+.pf-x.on{background:#1C1814;color:#F7F5F0;border-color:#1C1814;}
+.pf-ig.on{background:var(--pink-l);color:var(--pink);border-color:var(--pink);}
+.pf-fb.on{background:var(--blue-l);color:var(--blue);border-color:var(--blue);}
+.pf-tt.on{background:#E8F9F9;color:#0F6674;border-color:var(--teal);}
+.pf-yt.on{background:#FCECEA;color:var(--red);border-color:var(--red);}
+.pf-li.on{background:#EAF2FB;color:#0A3D7C;border-color:#0A3D7C;}
+
+/* ── MONTH ── */
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.dow{text-align:center;font-size:.74rem;color:var(--text3);font-weight:500;padding:5px 0;text-transform:uppercase;letter-spacing:.04em;}
+.mday{min-height:90px;border-radius:8px;padding:5px 4px;cursor:pointer;transition:background .1s;border:1.5px solid transparent;}
+.mday:hover{background:var(--bg2);}
+.mday.today{border-color:var(--accent);}
+.mday.today .mday-n{color:var(--accent);font-weight:600;}
+.mday.other .mday-n{color:var(--text3);}
+.mday-n{font-size:.88rem;font-weight:500;margin-bottom:3px;}
+.mday-chips{display:flex;flex-direction:column;gap:2px;}
+.mchip{font-size:.68rem;padding:2px 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.mc-post{background:var(--blue-l);color:var(--blue);}
+.mc-ev{background:var(--amber-l);color:var(--amber);}
+.mc-tv{background:var(--accent-l);color:var(--accent);}
+.mc-entry{background:var(--purple-l);color:var(--purple);}
+.mday-more{font-size:.66rem;color:var(--text3);margin-top:1px;}
+.legend{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text3);}
+.leg-dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+/* ── WEEK (heatmap) ── */
+.week-wrap{overflow-x:auto;}
+.week-grid{display:grid;grid-template-columns:58px repeat(7,1fr);min-width:600px;}
+
+/* time-label column */
+.wg-tl{font-size:.72rem;color:var(--text3);padding:2px 5px 0 0;text-align:right;height:56px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:flex-end;background:var(--bg2);}
+.wg-corner{background:var(--bg2);border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+
+/* day header */
+.wg-head{padding:8px 4px;text-align:center;border-left:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);}
+.wg-head.tod{background:var(--accent-l);}
+.wg-head-dow{font-size:.76rem;color:var(--text3);}
+.wg-head.tod .wg-head-dow{color:var(--accent);}
+.wg-head-d{font-size:1.05rem;font-weight:400;color:var(--text);}
+.wg-head.tod .wg-head-d{font-weight:600;color:var(--accent);}
+
+/* cells */
+.wg-cell{border-left:1px solid var(--border);border-bottom:1px solid var(--border);height:56px;position:relative;cursor:pointer;transition:filter .1s;}
+.wg-cell:hover{filter:brightness(.93);}
+/* Metricool-style pink heatmap — dark mode */
+.heat-0{background:#25252E;}
+.heat-1{background:#3D2535;}
+.heat-2{background:#5C2442;}
+.heat-3{background:#852550;}
+.heat-4{background:#B52B5E;}
+.heat-5{background:#E8336D;}
+.wg-pct{position:absolute;bottom:3px;right:4px;font-size:.58rem;color:rgba(255,180,210,.65);font-weight:500;pointer-events:none;}
+.wg-cell.tod{filter:saturate(1.1);}
+
+/* events inside cells */
+.wg-ev{position:absolute;left:2px;right:2px;border-radius:3px;font-size:.66rem;padding:2px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;z-index:3;}
+.wg-ev-post{background:rgba(26,75,122,.15);color:var(--blue);border-left:2px solid var(--blue);}
+.wg-ev-ev{background:rgba(139,74,28,.13);color:var(--amber);border-left:2px solid var(--amber);}
+.wg-ev-tv{background:rgba(45,95,63,.13);color:var(--accent);border-left:2px solid var(--accent);}
+
+/* heatmap legend */
+.heat-legend{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.heat-legend-label{font-size:.8rem;color:var(--text3);}
+.heat-swatches{display:flex;gap:2px;}
+.heat-sw{width:18px;height:12px;border-radius:2px;}
+.heat-note{font-size:.7rem;color:var(--text3);margin-left:4px;font-style:italic;}
+
+/* tooltip */
+.ht-tip{position:fixed;z-index:200;background:var(--text);color:var(--bg);padding:6px 10px;border-radius:8px;font-size:.82rem;pointer-events:none;display:none;max-width:200px;line-height:1.5;}
+
+/* ── AI FEATURES ── */
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r);border:1px solid var(--accent);background:var(--accent-l);font-family:var(--sans);font-size:.78rem;color:var(--accent);cursor:pointer;transition:all .12s;font-weight:500;}
+.ai-btn:hover{background:var(--accent);color:#fff;}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ai-spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.caption-results{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.caption-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:all .14s;position:relative;}
+.caption-card:hover{border-color:var(--accent);background:var(--accent-l);}
+.caption-card p{font-size:.88rem;color:var(--text2);line-height:1.6;white-space:pre-wrap;}
+.caption-card .caption-use{position:absolute;top:8px;right:8px;font-size:.68rem;color:var(--accent);opacity:0;transition:opacity .12s;font-weight:500;}
+.caption-card:hover .caption-use{opacity:1;}
+.caption-label{font-size:.75rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;}
+.ai-error{background:var(--red-l);color:var(--red);border-radius:var(--r);padding:8px 12px;font-size:.78rem;margin-top:8px;}
+.tv-ai-bar{background:var(--accent-l);border:1px solid rgba(45,95,63,.2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.tv-ai-bar p{flex:1;font-size:.83rem;color:var(--text2);line-height:1.5;min-width:180px;}
+.tv-ai-bar strong{color:var(--accent);}
+.tv-site-link{font-size:.75rem;color:var(--blue);text-decoration:none;font-weight:500;padding:3px 8px;border-radius:6px;border:1px solid var(--blue-l);background:var(--blue-l);transition:all .12s;white-space:nowrap;display:inline-block;}
+.tv-site-link:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+.tv-ai-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:7px;display:flex;gap:12px;align-items:flex-start;}
+.tv-ai-item-info{flex:1;}
+.tv-ai-item-title{font-size:.88rem;font-weight:500;}
+.tv-ai-item-meta{font-size:.74rem;color:var(--text3);margin-top:2px;}
+.tv-ai-item-topic{font-size:.79rem;color:var(--text2);margin-top:5px;line-height:1.5;}
+.tv-ai-item-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;margin-top:2px;}
+
+/* ── TV TABLE ── */
+.tv-table-wrap{overflow-x:auto;margin-bottom:20px;}
+.tv-table{width:100%;border-collapse:collapse;min-width:700px;table-layout:fixed;}
+.tv-table th{background:var(--bg2);padding:12px 14px;font-size:.8rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border:1px solid var(--border);text-align:left;position:sticky;top:0;z-index:2;}
+.tv-table th.show-head{background:var(--card);color:var(--text);font-size:.92rem;font-weight:500;text-transform:none;letter-spacing:0;border-bottom:2px solid var(--border2);}
+.tv-table th .show-channel{font-size:.76rem;color:var(--text3);font-weight:400;display:block;margin-top:1px;}
+.tv-table td{padding:12px 14px;border:1px solid var(--border);vertical-align:top;font-size:.88rem;background:var(--card);}
+.tv-table tr:hover td{background:var(--bg2);}
+.tv-table td.date-col{color:var(--text3);font-size:.82rem;white-space:nowrap;width:90px;background:var(--bg2)!important;}
+.tv-table td.date-col strong{display:block;color:var(--text);font-size:.9rem;font-weight:500;}
+.tv-table td.date-col .time{color:var(--text3);font-size:.7rem;}
+.tv-cell-topic{font-size:.88rem;color:var(--text);line-height:1.5;margin-bottom:4px;}
+.tv-cell-guests{font-size:.8rem;color:var(--text2);line-height:1.5;}
+.tv-cell-guests strong{color:var(--text3);font-weight:500;}
+.tv-cell-empty{color:var(--text3);font-size:.82rem;font-style:italic;}
+.tv-cell-actions{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.tv-row-today td{background:transparent!important;border-top:1.5px solid var(--accent)!important;border-bottom:1.5px solid var(--accent)!important;}
+.tv-row-today td:first-child{border-left:3px solid var(--accent)!important;}
+.tv-row-today td:last-child{border-right:1.5px solid var(--accent)!important;}
+.tv-badge-today{display:inline-block;background:var(--amber-l);color:var(--amber);font-size:.63rem;font-weight:500;padding:1px 6px;border-radius:8px;margin-left:4px;}
+.tv-badge-past{display:inline-block;background:var(--bg3);color:var(--text3);font-size:.63rem;padding:1px 6px;border-radius:8px;margin-left:4px;}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:100;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--card);border-radius:var(--r-lg);padding:28px;width:540px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.18);max-height:92vh;overflow-y:auto;}
+.modal h2{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:16px;}
+.modal-form{display:flex;flex-direction:column;gap:12px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* Platform groups in modal */
+.plat-groups{display:flex;flex-direction:column;gap:10px;}
+.plat-group{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;}
+.plat-group-label{font-size:.76rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;}
+.plat-row{display:flex;gap:6px;flex-wrap:wrap;}
+.pt{padding:6px 13px;border-radius:20px;border:1px solid var(--border2);background:none;font-family:var(--sans);font-size:.84rem;color:var(--text2);cursor:pointer;transition:all .12s;}
+.pt:hover{background:var(--bg2);}
+/* platform-specific on-states */
+.pt[data-p="X/Twitter"].on{background:#E8E7EF;color:#1A1A1F;border-color:#E8E7EF;}
+.pt[data-p="Instagram"].on{background:var(--pink-l);color:var(--pink);border-color:var(--pink);}
+.pt[data-p="Facebook"].on{background:var(--blue-l);color:var(--blue);border-color:var(--blue);}
+.pt[data-p="Instagram Story"].on{background:var(--pink-l);color:var(--pink);border-color:var(--pink);}
+.pt[data-p="Instagram Reel"].on{background:var(--purple-l);color:var(--purple);border-color:var(--purple);}
+.pt[data-p="TikTok"].on{background:var(--teal-l);color:var(--teal);border-color:var(--teal);}
+.pt[data-p="YouTube"].on{background:var(--red-l);color:var(--red);border-color:var(--red);}
+.pt[data-p="YouTube Short"].on{background:var(--red-l);color:var(--red);border-color:var(--red);}
+.pt[data-p="LinkedIn"].on{background:var(--blue-l);color:var(--blue);border-color:var(--blue);}
+
+.char-hint{font-size:.7rem;color:var(--text3);text-align:right;margin-top:2px;}
+.char-hint.warn{color:var(--amber);}
+.hint-box{background:var(--accent-l);border-radius:var(--r);padding:9px 12px;font-size:.77rem;color:var(--accent);line-height:1.6;margin-top:2px;display:none;}
+
+/* best-time tip in modal */
+.best-time-tip{background:var(--bg2);border-radius:var(--r);padding:8px 12px;font-size:.76rem;color:var(--text2);line-height:1.6;display:none;}
+.best-time-tip strong{color:var(--accent);}
+
+/* ── TV ── */
+.tv-search-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;}
+.tv-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tv-link{padding:5px 12px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);font-family:var(--sans);font-size:.75rem;color:var(--blue);text-decoration:none;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.tv-link:hover{background:var(--blue-l);border-color:var(--blue);}
+.tv-add{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:16px;}
+.tv-add h3{font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:12px;}
+.tv-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 15px;margin-bottom:7px;transition:border-color .12s;}
+.tv-card:hover{border-color:var(--border2);}
+.tv-topic-text{font-size:.78rem;color:var(--text2);margin-top:7px;line-height:1.55;}
+.tv-footer{display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap;}
+.badge{font-size:.66rem;font-weight:500;padding:2px 8px;border-radius:10px;}
+.b-today{background:var(--amber-l);color:var(--amber);}
+.b-up{background:var(--blue-l);color:var(--blue);}
+.b-past{background:var(--bg3);color:var(--text3);}
+.sec-div{font-size:.67rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:16px 0 7px;}
+
+/* ── POSTS LIST ── */
+.post-row{display:flex;align-items:center;gap:12px;padding:11px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;transition:border-color .12s;}
+.post-row:hover{border-color:var(--border2);}
+.pplat{font-size:.73rem;font-weight:500;padding:2px 7px;border-radius:10px;flex-shrink:0;white-space:nowrap;}
+.ptext{flex:1;font-size:.87rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pwhen{font-size:.79rem;color:var(--text3);flex-shrink:0;white-space:nowrap;}
+.pdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.95rem;padding:2px 5px;border-radius:4px;}
+.pdel:hover{color:var(--red);}
+
+/* ── SETTINGS ── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}
+.slabel{font-size:.83rem;}.ssub{font-size:.74rem;color:var(--text3);margin-top:1px;}
+.toggle{position:relative;width:34px;height:19px;}
+.toggle input{opacity:0;width:0;height:0;}
+.ttrack{position:absolute;inset:0;background:var(--bg3);border-radius:10px;cursor:pointer;transition:background .18s;}
+.toggle input:checked+.ttrack{background:var(--accent);}
+.ttrack::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .18s;}
+.toggle input:checked+.ttrack::after{transform:translateX(15px);}
+/* ── MODAL TABS ── */
+.modal-tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+.modal-tab{padding:7px 16px;border-radius:var(--r);border:1px solid transparent;background:none;font-family:var(--sans);font-size:.88rem;color:var(--text2);cursor:pointer;transition:all .12s;}
+.modal-tab:hover{background:var(--bg2);}
+.modal-tab.on{background:var(--accent-l);color:var(--accent);border-color:var(--accent);font-weight:500;}
+
+/* ── TAGESPLANER ── */
+.etype-btn{padding:6px 13px;border-radius:20px;border:1px solid var(--border2);background:none;font-family:var(--sans);font-size:.82rem;color:var(--text2);cursor:pointer;transition:all .12s;}
+.etype-btn:hover{background:var(--bg2);}
+.etype-btn.on{background:var(--accent-l);color:var(--accent);border-color:var(--accent);font-weight:500;}
+.entry-card{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px;background:var(--card);transition:border-color .12s;}
+.entry-card:hover{border-color:var(--border2);}
+.entry-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px;}
+.entry-body{flex:1;min-width:0;}
+.entry-title{font-size:.92rem;font-weight:500;color:var(--text);}
+.entry-note{font-size:.82rem;color:var(--text2);margin-top:4px;line-height:1.6;white-space:pre-wrap;}
+.entry-meta{font-size:.74rem;color:var(--text3);margin-top:4px;}
+.entry-actions{display:flex;gap:5px;flex-shrink:0;}
+.entry-done{text-decoration:line-through;opacity:.5;}
+/* Mini calendar for planer */
+.planer-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.planer-mini-dow{text-align:center;font-size:.65rem;color:var(--text3);padding:3px 0;font-weight:500;}
+.planer-mini-day{text-align:center;font-size:.78rem;padding:4px 2px;border-radius:5px;cursor:pointer;transition:background .1s;color:var(--text2);position:relative;}
+.planer-mini-day:hover{background:var(--bg2);}
+.planer-mini-day.today{background:var(--accent);color:#fff;font-weight:600;}
+.planer-mini-day.selected{background:var(--accent-l);color:var(--accent);font-weight:500;}
+.planer-mini-day.has-entry::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--amber);}
+.planer-mini-day.today.has-entry::after{background:#fff;}
+.planer-mini-day.other{color:var(--text3);}
+.empty{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.82rem;}
+/* ── AUTH ── */
+.auth-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:36px 32px;width:360px;max-width:95vw;box-shadow:var(--shadow);}
+.auth-box h1{font-family:var(--serif);font-size:1.6rem;font-weight:400;margin-bottom:6px;}
+.auth-box p{font-size:.88rem;color:var(--text2);margin-bottom:24px;line-height:1.6;}
+.auth-toggle{font-size:.82rem;color:var(--text3);text-align:center;margin-top:14px;}
+.auth-toggle a{color:var(--accent);cursor:pointer;text-decoration:none;}
+.auth-toggle a:hover{text-decoration:underline;}
+.auth-error{background:var(--red-l);color:var(--red);border-radius:var(--r);padding:9px 12px;font-size:.82rem;margin-top:10px;display:none;}
+.auth-success{background:var(--accent-l);color:var(--accent);border-radius:var(--r);padding:9px 12px;font-size:.82rem;margin-top:10px;display:none;}
+.sync-bar{position:fixed;bottom:16px;right:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;font-size:.8rem;color:var(--text2);display:none;align-items:center;gap:8px;box-shadow:var(--shadow);z-index:50;}
+.sync-bar.show{display:flex;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.user-chip{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.user-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.78rem;padding:0;}
+.user-chip button:hover{color:var(--red);}
+</style>
+
+<body>
+
+<div class="shell">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div><div class="logo">SM<em>·</em>Planer</div><div class="logo-sub">Familienpolitik</div></div>
+  <div class="topbar-right" style="display:flex;align-items:center;gap:10px;">
+    <span class="chip" id="today-chip"></span>
+    <div class="user-chip" id="user-chip" style="display:none;">
+      <span id="user-email-label"></span>
+      <button onclick="signOut()" title="Abmelden">Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-sep">Navigation</div>
+  <button class="nb on" onclick="goTo('kalender',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    Kalender <span class="nbadge" id="nb-posts">0</span>
+  </button>
+  <button class="nb" onclick="goTo('eintraege',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    Alle Einträge <span class="nbadge" id="nb-planer">0</span>
+  </button>
+  <button class="nb" onclick="goTo('themen',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Thementage <span class="nbadge hot" id="nb-ev">0</span>
+  </button>
+  <button class="nb" onclick="goTo('tv',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2 12 7 7 2"/></svg>
+    TV & Talkshows <span class="nbadge hot" id="nb-tv">0</span>
+  </button>
+  <button class="nb" onclick="goTo('einstellungen',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Einstellungen
+  </button>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ══ KALENDER ══ -->
+<section class="sec on" id="sec-kalender">
+  <div class="ph"><h1>Kalender</h1><p>Posts, Notizen, Thementage und Sendungen auf einen Blick — klicke auf einen Tag zum Hinzufügen</p></div>
+  <div class="card cp">
+    <div class="cal-toolbar">
+      <button class="btn" onclick="calNav(-1)">← zurück</button>
+      <h2 id="cal-title"></h2>
+      <button class="btn" onclick="calNav(1)">weiter →</button>
+      <div class="view-toggle">
+        <button class="vt-btn on" id="vt-m" onclick="setView('monat')">Monat</button>
+        <button class="vt-btn" id="vt-w" onclick="setView('woche')">Woche</button>
+      </div>
+      <button class="btn btn-p" onclick="openModal(null,null)">+ Post planen</button>
+    </div>
+    <div id="cal-body"></div>
+  </div>
+</section>
+
+<!-- ══ ALLE EINTRÄGE ══ -->
+<section class="sec" id="sec-eintraege">
+  <div class="ph"><h1>Alle Einträge</h1><p>Alle Notizen, Termine, Aufgaben und Ideen als Übersicht</p></div>
+  <div id="planer-all-list"></div>
+</section>
+
+<!-- ══ THEMENTAGE ══ -->
+<section class="sec" id="sec-themen">
+  <div class="ph"><h1>Thematische Jahrestage</h1><p>Gedenk- und Aktionstage für Familienpolitik, Kinder, Bildung &amp; Gleichstellung</p></div>
+  <div class="card cp" style="margin-bottom:18px;">
+    <div class="cal-toolbar">
+      <button class="btn" onclick="calNav(-1)">← zurück</button>
+      <h2 id="cal-title2"></h2>
+      <button class="btn" onclick="calNav(1)">weiter →</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="ev-filters">
+      <button class="btn btn-sm" style="border-radius:20px;background:var(--text);color:var(--bg);border-color:var(--text);" data-f="alle" onclick="setEvF('alle',this)">Alle</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="familie" onclick="setEvF('familie',this)">Familie</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="kinder" onclick="setEvF('kinder',this)">Kinder</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="bildung" onclick="setEvF('bildung',this)">Bildung</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="frauen" onclick="setEvF('frauen',this)">Frauen</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="soziales" onclick="setEvF('soziales',this)">Soziales</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="senioren" onclick="setEvF('senioren',this)">Senioren</button>
+      <button class="btn btn-sm" style="border-radius:20px;" data-f="ostdeutschland" onclick="setEvF('ostdeutschland',this)">Ostdeutschland</button>
+    </div>
+  </div>
+  <div id="ev-list"></div>
+</section>
+
+<!-- ══ TV ══ -->
+<section class="sec" id="sec-tv">
+  <div class="ph"><h1>TV &amp; Talkshows</h1><p>Sendetermine, Themen und Gäste aller relevanten Talkshows</p></div>
+
+  <!-- Action bar: 2-step workflow -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:18px;">
+    <div style="font-size:.78rem;font-weight:500;color:var(--text);margin-bottom:12px;">Sendungen abrufen — 3 Klicks</div>
+    <div style="display:flex;gap:0;align-items:stretch;flex-wrap:wrap;gap:10px;">
+
+      <!-- Step 1 -->
+      <div style="flex:1;min-width:200px;background:var(--bg2);border-radius:var(--r);padding:12px 14px;">
+        <div style="font-size:.68rem;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">① Suche starten</div>
+        <p style="font-size:.78rem;color:var(--text2);line-height:1.55;margin-bottom:10px;">Öffnet Claude mit fertiger Anfrage. Claude sucht Sendetermine, Themen &amp; Gäste und antwortet im JSON-Format.</p>
+        <a href="#" onclick="openClaudeSearch(event)" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:var(--r);border:1px solid var(--accent);background:var(--accent-l);font-family:var(--sans);font-size:.78rem;color:var(--accent);font-weight:500;cursor:pointer;transition:all .12s;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          In Claude.ai suchen →
+        </a>
+      </div>
+
+      <!-- Arrow -->
+      <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding:0 4px;">→</div>
+
+      <!-- Step 2 -->
+      <div style="flex:1;min-width:200px;background:var(--bg2);border-radius:var(--r);padding:12px 14px;">
+        <div style="font-size:.68rem;font-weight:500;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">② JSON kopieren</div>
+        <p style="font-size:.78rem;color:var(--text2);line-height:1.55;">Claude antwortet mit einer Tabelle <strong>und</strong> einem JSON-Block am Ende. Den JSON-Block komplett kopieren (alles zwischen <code style="font-size:.72rem;background:var(--bg3);padding:1px 4px;border-radius:3px;">[ ]</code>).</p>
+      </div>
+
+      <!-- Arrow -->
+      <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding:0 4px;">→</div>
+
+      <!-- Step 3 -->
+      <div style="flex:2;min-width:240px;background:var(--bg2);border-radius:var(--r);padding:12px 14px;">
+        <div style="font-size:.68rem;font-weight:500;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">③ Hier einfügen &amp; importieren</div>
+        <textarea id="tv-json-input" class="inp" rows="3" placeholder='[{"show":"Maischberger","date":"2026-06-10",...}]' style="font-size:.72rem;font-family:monospace;margin-bottom:8px;"></textarea>
+        <div style="display:flex;gap:7px;align-items:center;">
+          <button class="btn btn-p btn-sm" onclick="importFromJSON()">Sendungen importieren</button>
+          <button class="btn btn-sm" onclick="document.getElementById('tv-json-input').value=''">Leeren</button>
+          <span id="tv-import-status" style="font-size:.74rem;color:var(--accent);display:none;"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Static overview table (always visible, shows website links) -->
+  <div class="tv-table-wrap" style="margin-bottom:20px;">
+    <table class="tv-table" id="tv-static-table">
+      <thead>
+        <tr>
+          <th style="width:50px;"></th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#C0392B;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Maischberger
+            <span class="show-channel">ARD · Di &amp; Mi ~22:50</span>
+          </th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#E67E22;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Hart aber fair
+            <span class="show-channel">ARD · Mo ~21:00</span>
+          </th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#2980B9;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Markus Lanz
+            <span class="show-channel">ZDF · Di–Do ~23:15</span>
+          </th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#8E44AD;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Maybrit Illner
+            <span class="show-channel">ZDF · Do ~22:15</span>
+          </th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#16A085;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Dunja Hayali
+            <span class="show-channel">ZDF · Sa ~23:00</span>
+          </th>
+          <th class="show-head">
+            <span style="display:inline-block;width:3px;height:14px;background:#D35400;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>phoenix runde
+            <span class="show-channel">Phoenix · Do ~22:15</span>
+          </th>
+        </tr>
+        <tr>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;font-size:.68rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.04em;">Website</td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.daserste.de/information/talk/maischberger/index.html" target="_blank" class="tv-site-link">daserste.de →</a>
+          </td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.daserste.de/information/talk/hartaberfair/index.html" target="_blank" class="tv-site-link">daserste.de →</a>
+          </td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.zdf.de/politik/markus-lanz" target="_blank" class="tv-site-link">zdf.de →</a>
+          </td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.zdf.de/politik/maybrit-illner" target="_blank" class="tv-site-link">zdf.de →</a>
+          </td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.zdf.de/serien/dunja-hayali" target="_blank" class="tv-site-link">zdf.de →</a>
+          </td>
+          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
+            <a href="https://www.phoenix.de/sendungen/gespraeche/phoenix-runde-104.html" target="_blank" class="tv-site-link">phoenix.de →</a>
+          </td>
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+  <!-- Dynamic entries table -->
+  <div id="tv-table-container"></div>
+
+  <!-- Manual add -->
+  <details style="margin-top:12px;">
+    <summary style="cursor:pointer;font-size:.8rem;color:var(--text3);padding:8px 0;user-select:none;">+ Sendung eintragen</summary>
+    <div class="tv-add" style="margin-top:8px;">
+      <div class="g3" style="margin-bottom:10px;">
+        <div class="fl"><label class="lbl">Sendung</label>
+          <select class="inp" id="tv-show">
+            <option>Maischberger</option><option>Hart aber fair</option>
+            <option>Markus Lanz</option><option>Maybrit Illner</option>
+            <option>Dunja Hayali</option><option>phoenix runde</option><option>Sonstige</option>
+          </select>
+        </div>
+        <div class="fl"><label class="lbl">Datum</label><input type="date" class="inp" id="tv-date"></div>
+        <div class="fl"><label class="lbl">Uhrzeit</label><input type="time" class="inp" id="tv-time" value="22:15"></div>
+      </div>
+      <div class="fl" style="margin-bottom:10px;"><label class="lbl">Thema</label>
+        <input type="text" class="inp" id="tv-topic" placeholder="z. B. Kitamangel — was muss sich ändern?">
+      </div>
+      <div class="fl" style="margin-bottom:10px;"><label class="lbl">Gäste</label>
+        <input type="text" class="inp" id="tv-guests" placeholder="z. B. Karl Lauterbach (SPD), Lisa Paus (Grüne) …">
+      </div>
+      <div class="g2">
+        <div class="fl"><label class="lbl">Kanal</label><input type="text" class="inp" id="tv-channel" placeholder="ARD, ZDF, Phoenix …"></div>
+        <div class="fl"><label class="lbl">Tags (kommagetrennt)</label><input type="text" class="inp" id="tv-tags" placeholder="familie, kinder …"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button class="btn btn-p" onclick="addTV()">Sendung speichern</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- ══ EINSTELLUNGEN ══ -->
+<section class="sec" id="sec-einstellungen">
+  <div class="ph"><h1>Einstellungen</h1><p>Darstellung, Posting-Zeiten und Daten verwalten</p></div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div class="card cp">
+      <h3 style="font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:10px;">Beste Posting-Zeiten</h3>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:12px;line-height:1.6;">Heatmap basiert auf deinen <strong>Metricool-Daten</strong> (Woche 8.–14. Juni 2026). Die Prozentzahlen zeigen das relative Engagement deines Accounts je Stunde und Tag. Um die Daten zu aktualisieren, schick neue Metricool-Screenshots in den Chat.</p>
+      <div id="heat-editor"></div>
+    </div>
+    <div class="card cp">
+      <h3 style="font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:10px;">Caption-Generator</h3>
+      <p style="font-size:.8rem;color:var(--text2);line-height:1.6;">Der Caption-Generator im Post-Planer nutzt die Anthropic API. Diese kostet bei reiner Textgenerierung (ohne Web-Suche) nur Bruchteile eines Cents pro Anfrage — das bleibt erschwinglich. Ein API-Key kann unter <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue)">console.anthropic.com</a> erstellt werden.</p>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+        <input type="password" class="inp" id="api-key-inp" placeholder="sk-ant-…" style="flex:1;">
+        <button class="btn btn-p" onclick="saveApiKey()">Speichern</button>
+        <button class="btn" onclick="clearApiKey()">Löschen</button>
+      </div>
+    </div>
+    <div class="card cp">
+      <h3 style="font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:12px;">Darstellung</h3>
+      <div class="srow">
+        <div><div class="slabel">Vergangene Sendungen anzeigen</div><div class="ssub">Sendungen die bereits gelaufen sind einblenden</div></div>
+        <label class="toggle"><input type="checkbox" id="s-pastTV" onchange="saveSetting('showPastTV',this.checked)" checked><span class="ttrack"></span></label>
+      </div>
+      <div class="srow">
+        <div><div class="slabel">Vergangene Posts ausblenden</div><div class="ssub">Posts deren Datum verstrichen ist nicht mehr anzeigen</div></div>
+        <label class="toggle"><input type="checkbox" id="s-hidePast" onchange="saveSetting('hidePastPosts',this.checked)"><span class="ttrack"></span></label>
+      </div>
+    </div>
+    <div class="card cp">
+      <h3 style="font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:12px;">Daten</h3>
+      <div class="srow">
+        <div><div class="slabel">Exportieren</div><div class="ssub">Posts und Sendungen als JSON herunterladen</div></div>
+        <button class="btn" onclick="exportData()">Exportieren</button>
+      </div>
+      <div class="srow">
+        <div><div class="slabel">Alle Daten löschen</div><div class="ssub">Posts und Sendungen unwiderruflich entfernen</div></div>
+        <button class="btn btn-red" onclick="clearData()">Zurücksetzen</button>
+      </div>
+    </div>
+    <div class="card cp" style="font-size:.8rem;color:var(--text2);line-height:1.7;">
+      <strong style="color:var(--text)">SM-Planer · Mandy Eißing v14.0</strong><br>
+      Läuft vollständig im Browser — keine Daten verlassen deinen Computer.
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<!-- ══ MODAL ══ -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+  <div class="modal">
+    <!-- Tab bar -->
+    <div class="modal-tabs">
+      <button class="modal-tab on" id="tab-post" onclick="switchModalTab('post')">📅 Post planen</button>
+      <button class="modal-tab" id="tab-entry" onclick="switchModalTab('entry')">📝 Eintrag hinzufügen</button>
+    </div>
+    <div style="font-size:.82rem;color:var(--text3);margin-bottom:14px;" id="modal-date-label"></div>
+
+    <!-- POST TAB -->
+    <div id="modal-post-tab">
+      <div class="modal-form">
+        <div class="fl">
+          <label class="lbl">Plattform(en)</label>
+          <div class="plat-groups">
+            <div class="plat-group">
+              <div class="plat-group-label">Instagram &amp; Facebook</div>
+              <div class="plat-row">
+                <button class="pt on" data-p="Instagram" onclick="togglePlat(this)">Instagram Post</button>
+                <button class="pt" data-p="Instagram Story" onclick="togglePlat(this)">Story</button>
+                <button class="pt" data-p="Instagram Reel" onclick="togglePlat(this)">Reel</button>
+                <button class="pt" data-p="Facebook" onclick="togglePlat(this)">Facebook</button>
+              </div>
+            </div>
+            <div class="plat-group">
+              <div class="plat-group-label">Video</div>
+              <div class="plat-row">
+                <button class="pt" data-p="TikTok" onclick="togglePlat(this)">TikTok</button>
+                <button class="pt" data-p="YouTube" onclick="togglePlat(this)">YouTube Video</button>
+                <button class="pt" data-p="YouTube Short" onclick="togglePlat(this)">YouTube Short</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="best-time-tip" id="best-time-tip"></div>
+        <div class="g2">
+          <div class="fl"><label class="lbl">Datum</label><input type="date" class="inp" id="p-date"></div>
+          <div class="fl"><label class="lbl">Uhrzeit</label><input type="time" class="inp" id="p-time" value="09:00"></div>
+        </div>
+        <div class="fl"><label class="lbl">Anlass / Bezug</label>
+          <input type="text" class="inp" id="p-anlass" placeholder="z. B. Internationaler Kindertag, Maischberger …">
+        </div>
+        <div class="fl">
+          <label class="lbl">Post-Text</label>
+          <textarea class="inp" id="p-text" rows="4" placeholder="Text des Posts …" oninput="updateChar()"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+            <button class="ai-btn" id="caption-btn" onclick="generateCaptions()" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M18 2v4m2-2h-4"/></svg>
+              Caption-Vorschläge generieren
+            </button>
+            <div class="char-hint" id="char-hint">0 Zeichen</div>
+          </div>
+          <div id="caption-results"></div>
+        </div>
+        <div class="fl"><label class="lbl">Hashtags / Notizen</label>
+          <input type="text" class="inp" id="p-tags" placeholder="#Familienpolitik #Kindertag …">
+        </div>
+        <div class="hint-box" id="p-hint"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-p" onclick="savePost()">Post speichern</button>
+      </div>
+    </div>
+
+    <!-- ENTRY TAB -->
+    <div id="modal-entry-tab" style="display:none;">
+      <div class="modal-form">
+        <div class="fl">
+          <label class="lbl">Typ</label>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+            <button class="etype-btn on" data-t="notiz" onclick="setEntryType(this)">📝 Notiz</button>
+            <button class="etype-btn" data-t="termin" onclick="setEntryType(this)">📅 Termin</button>
+            <button class="etype-btn" data-t="aufgabe" onclick="setEntryType(this)">✅ Aufgabe</button>
+            <button class="etype-btn" data-t="idee" onclick="setEntryType(this)">💡 Idee</button>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="fl"><label class="lbl">Datum</label><input type="date" class="inp" id="entry-date"></div>
+          <div class="fl" id="entry-time-row">
+            <label class="lbl">Uhrzeit (optional)</label>
+            <input type="time" class="inp" id="entry-time">
+          </div>
+        </div>
+        <div class="fl">
+          <label class="lbl">Titel</label>
+          <input type="text" class="inp" id="entry-title" placeholder="z. B. Pressegespräch vorbereiten, Idee für Reel …">
+        </div>
+        <div class="fl">
+          <label class="lbl">Notiz / Details</label>
+          <textarea class="inp" id="entry-note" rows="3" placeholder="Weitere Details, Links, Gedanken …"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-p" onclick="saveEntry()">Eintrag speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- tooltip -->
+<div class="ht-tip" id="ht-tip"></div>
+
+<script>
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPABASE SETUP
+// ══════════════════════════════════════════════════════════════════════════════
+const SUPA_URL  = 'https://mkdcgkynbyryiyftykin.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZGNna3luYnlyeWl5ZnR5a2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTc3MDAsImV4cCI6MjA5NjA5MzcwMH0.n5mX_9RuSGdcTAQMACoMF4K1PJTXdBZ3fQVryB3MGzM';
+const supa      = supabase.createClient(SUPA_URL, SUPA_KEY);
+let   currentUser = null;
+
+// ── AUTH FUNCTIONS ──────────────────────────────────────────────────────────
+let authMode = 'login'; // 'login' | 'register'
+
+function switchAuthMode(mode) {
+  authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('auth-title').textContent       = isReg ? 'Konto erstellen' : 'Anmelden';
+  document.getElementById('auth-subtitle').textContent    = isReg
+    ? 'Erstelle ein Konto um deine Daten zu synchronisieren.'
+    : 'Melde dich an um deine Daten auf allen Geräten zu synchronisieren.';
+  document.getElementById('auth-submit-btn').textContent  = isReg ? 'Konto erstellen' : 'Anmelden';
+  document.getElementById('auth-toggle-row').innerHTML    = isReg
+    ? 'Bereits ein Konto? <a onclick="switchAuthMode('login')">Anmelden</a>'
+    : 'Noch kein Konto? <a onclick="switchAuthMode('register')">Registrieren</a>';
+  document.getElementById('auth-error').style.display   = 'none';
+  document.getElementById('auth-success').style.display = 'none';
+}
+
+async function authSubmit() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl    = document.getElementById('auth-error');
+  const okEl     = document.getElementById('auth-success');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!email || !password) { showAuthError('Bitte E-Mail und Passwort eingeben.'); return; }
+
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = true; btn.textContent = '…';
+
+  try {
+    let result;
+    if (authMode === 'register') {
+      result = await supa.auth.signUp({ email, password });
+      if (result.error) throw result.error;
+      okEl.textContent = 'Bestätigungs-E-Mail gesendet! Bitte E-Mail prüfen.';
+      okEl.style.display = 'block';
+    } else {
+      result = await supa.auth.signInWithPassword({ email, password });
+      if (result.error) throw result.error;
+    }
+  } catch (err) {
+    showAuthError(translateAuthError(err.message));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'register' ? 'Konto erstellen' : 'Anmelden';
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function translateAuthError(msg) {
+  if (msg.includes('Invalid login'))         return 'E-Mail oder Passwort falsch.';
+  if (msg.includes('already registered'))    return 'Diese E-Mail ist bereits registriert. Bitte anmelden.';
+  if (msg.includes('Password should be'))    return 'Passwort muss mindestens 6 Zeichen haben.';
+  if (msg.includes('Unable to validate'))    return 'Ungültige E-Mail-Adresse.';
+  return msg;
+}
+
+async function signOut() {
+  await supa.auth.signOut();
+  currentUser = null;
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('user-chip').style.display    = 'none';
+}
+
+// ── SYNC INDICATOR ──────────────────────────────────────────────────────────
+function showSync(msg) {
+  const bar = document.getElementById('sync-bar');
+  document.getElementById('sync-msg').textContent = msg;
+  bar.classList.add('show');
+}
+function hideSync() {
+  setTimeout(() => document.getElementById('sync-bar').classList.remove('show'), 1200);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CLOUD DATA LAYER  –  replaces localStorage read/write for posts, tv, entries
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function cloudLoad() {
+  if (!currentUser) return;
+  showSync('Lade Daten…');
+  const uid = currentUser.id;
+  const [postsRes, tvRes, entriesRes] = await Promise.all([
+    supa.from('posts').select('*').eq('user_id', uid),
+    supa.from('tv_entries').select('*').eq('user_id', uid),
+    supa.from('entries').select('*').eq('user_id', uid),
+  ]);
+  // Map Supabase rows → local format (use supabase uuid as id)
+  ST.posts   = (postsRes.data   || []).map(r => ({
+    id: r.id, platform: r.platform, date: r.date, time: r.time,
+    text: r.text, anlass: r.anlass, tags: r.tags,
+  }));
+  ST.tv      = (tvRes.data      || []).map(r => ({
+    id: r.id, show: r.show, channel: r.channel, date: r.date, time: r.time,
+    topic: r.topic, guests: r.guests, tags: r.tags ? r.tags.split(',') : [],
+  }));
+  ST.entries = (entriesRes.data || []).map(r => ({
+    id: r.id, type: r.type, date: r.date, title: r.title,
+    note: r.note, time: r.time, done: r.done,
+  }));
+  saveST(); // keep local cache in sync
+  hideSync();
+}
+
+// ── POSTS ───────────────────────────────────────────────────────────────────
+async function cloudSavePost(post) {
+  if (!currentUser) return;
+  const { data, error } = await supa.from('posts').upsert({
+    id: typeof post.id === 'number' ? undefined : post.id, // let DB generate uuid for new numeric ids
+    user_id: currentUser.id,
+    platform: post.platform, date: post.date, time: post.time||'',
+    text: post.text, anlass: post.anlass||'', tags: post.tags||'',
+  }, { onConflict: 'id' }).select().single();
+  if (!error && data) post.id = data.id; // update local id to uuid
+  saveST();
+}
+
+async function cloudDeletePost(id) {
+  if (!currentUser) return;
+  await supa.from('posts').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+
+// ── TV ───────────────────────────────────────────────────────────────────────
+async function cloudSaveTV(tv) {
+  if (!currentUser) return;
+  const { data, error } = await supa.from('tv_entries').upsert({
+    id: typeof tv.id === 'number' ? undefined : tv.id,
+    user_id: currentUser.id,
+    show: tv.show, channel: tv.channel||'', date: tv.date, time: tv.time||'',
+    topic: tv.topic||'', guests: tv.guests||'', tags: Array.isArray(tv.tags)?tv.tags.join(','):'',
+  }, { onConflict: 'id' }).select().single();
+  if (!error && data) tv.id = data.id;
+  saveST();
+}
+
+async function cloudDeleteTV(id) {
+  if (!currentUser) return;
+  await supa.from('tv_entries').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+
+// ── ENTRIES ─────────────────────────────────────────────────────────────────
+async function cloudSaveEntry(entry) {
+  if (!currentUser) return;
+  const { data, error } = await supa.from('entries').upsert({
+    id: typeof entry.id === 'number' ? undefined : entry.id,
+    user_id: currentUser.id,
+    type: entry.type, date: entry.date, title: entry.title,
+    note: entry.note||'', time: entry.time||'', done: entry.done||false,
+  }, { onConflict: 'id' }).select().single();
+  if (!error && data) entry.id = data.id;
+  saveST();
+}
+
+async function cloudDeleteEntry(id) {
+  if (!currentUser) return;
+  await supa.from('entries').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PATCH LOCAL WRITE FUNCTIONS TO ALSO WRITE TO CLOUD
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Wrap savePost to also cloud-save
+const _origSavePost = savePost;
+// (we patch at init time below instead, to avoid hoisting issues)
+
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const ML=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const DL=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const DS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+// ── METRICOOL ENGAGEMENT DATA ──────────────────────────────────────────────
+// Direkt aus Metricool-Screenshots abgelesen (Woche 8.–14. Juni 2026)
+// Struktur: METRICOOL_DATA[dow][hour] = Prozentwert (0-100)
+// dow: 0=Mo, 1=Di, 2=Mi, 3=Do, 4=Fr, 5=Sa, 6=So
+const METRICOOL_DATA = {
+  0: {7:23,8:41,9:57,10:74,11:69,12:69,13:49,14:49,15:53,16:52,17:61,18:71,19:59,20:43,21:25,22:14}, // Mo
+  1: {7:31,8:56,9:77,10:97,11:90,12:86,13:64,14:63,15:61,16:65,17:67,18:72,19:59,20:45,21:26,22:14}, // Di
+  2: {7:29,8:48,9:70,10:94,11:85,12:85,13:66,14:63,15:68,16:67,17:70,18:76,19:61,20:47,21:27,22:13}, // Mi
+  3: {7:28,8:53,9:75,10:100,11:89,12:88,13:69,14:64,15:67,16:67,17:68,18:66,19:50,20:34,21:21,22:9}, // Do
+  4: {7:14,8:24,9:36,10:50,11:42,12:42,13:29,14:28,15:29,16:31,17:28,18:35,19:30,20:20,21:15,22:8},  // Fr
+  5: {7:11,8:19,9:29,10:38,11:33,12:35,13:26,14:24,15:26,16:25,17:28,18:33,19:33,20:22,21:14,22:9},  // Sa
+  6: {7:27,8:46,9:69,10:82,11:76,12:74,13:54,14:52,15:57,16:56,17:59,18:62,19:52,20:38,21:21,22:9},  // So
+};
+
+// Convert percentage to heat level 0-5 matching Metricool pink scale
+function pctToHeat(pct){
+  if(pct===undefined||pct===null)return 0;
+  if(pct>=90)return 5;
+  if(pct>=75)return 4;
+  if(pct>=56)return 3;
+  if(pct>=36)return 2;
+  if(pct>=20)return 1;
+  return 0;
+}
+
+// Get percentage for a cell (uses custom overrides if set, else Metricool data)
+function getPct(dow,hour,customHeat){
+  if(customHeat&&customHeat['metricool']&&customHeat['metricool'][dow]&&customHeat['metricool'][dow][hour]!==undefined){
+    return customHeat['metricool'][dow][hour];
+  }
+  return METRICOOL_DATA[dow]?.[hour]??0;
+}
+
+// heatScore for a given platform — Metricool data is platform-agnostic (overall best times)
+// For platform-specific views, we apply a modifier based on known platform peak patterns
+function heatScore(plat,dow,hour,customHeat){
+  const base=getPct(dow,hour,customHeat);
+  if(base===0)return 0;
+  // platform modifiers — boost/dampen certain slots
+  const key=heatKey(plat);
+  let pct=base;
+  if(key==='TikTok'){
+    // TikTok peaks later in evening
+    if(hour>=19&&hour<=22)pct=Math.min(100,pct+15);
+    if(hour>=7&&hour<=9)pct=Math.max(0,pct-10);
+  } else if(key==='YouTube'){
+    // YouTube afternoon/evening uploads
+    if(hour>=15&&hour<=20)pct=Math.min(100,pct+10);
+    if(hour>=7&&hour<=9)pct=Math.max(0,pct-15);
+  } else if(key==='LinkedIn'){
+    // LinkedIn strictly weekday business
+    if(dow>=5)return 0; // Wochenende = 0
+    if(hour<7||hour>18)return 0;
+    if(hour>=8&&hour<=12)pct=Math.min(100,pct+5);
+  }
+  return pctToHeat(pct);
+}
+
+// Combined — max across all platforms
+function heatScoreAll(dow,hour,customHeat){
+  return pctToHeat(getPct(dow,hour,customHeat));
+}
+
+// Tooltip with actual percentage
+function heatTooltip(plat,dow,hour,customHeat){
+  const pct=getPct(dow,hour,customHeat);
+  if(pct<20)return null;
+  const platLabel={'X/Twitter':'X/Twitter','Instagram':'Instagram & Facebook','TikTok':'TikTok','YouTube':'YouTube','LinkedIn':'LinkedIn'};
+  const key=heatKey(plat);
+  const stars=pct>=90?'🔥':pct>=75?'⭐⭐':pct>=56?'⭐':'';
+  return `${stars} ${pct}% Engagement\n${platLabel[key]||key}\n${DS[(dow+1)%7]}, ${hour}:00–${hour+1}:00 Uhr`;
+}
+
+function heatKey(plat){
+  if(['Instagram','Instagram Story','Instagram Reel','Facebook'].includes(plat))return 'Instagram';
+  if(['YouTube','YouTube Short'].includes(plat))return 'YouTube';
+  return plat;
+}
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+function loadST(){try{return JSON.parse(localStorage.getItem('smv3')||'{}')}catch(e){return{}}}
+function saveST(){localStorage.setItem('smv3',JSON.stringify(ST))}
+let ST=loadST();
+if(!ST.posts)ST.posts=[];
+if(!ST.tv)ST.tv=[];
+if(!ST.settings)ST.settings={showPastTV:true,hidePastPosts:false};
+if(!ST.customHeat)ST.customHeat={};
+saveST();
+
+const TODAY=new Date();
+let cY=TODAY.getFullYear(),cM=TODAY.getMonth();
+let view='monat';
+let evF='alle';
+let selPlats=['Instagram'];
+let editId=null;
+let weekRef=new Date(TODAY);
+let weekHeatPlat='X/Twitter'; // which platform's heat to show in week view
+
+function fmt(d){return d.toISOString().split('T')[0]}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('today-chip').textContent=
+    DL[TODAY.getDay()]+', '+TODAY.getDate()+'. '+ML[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  document.getElementById('p-date').value=fmt(TODAY);
+  document.getElementById('tv-date').value=fmt(TODAY);
+  document.getElementById('s-pastTV').checked=ST.settings.showPastTV!==false;
+  document.getElementById('s-hidePast').checked=!!ST.settings.hidePastPosts;
+  const k=localStorage.getItem('smv5_apikey');
+  if(k)document.getElementById('api-key-inp').value=k;
+
+  // ── Supabase auth state listener ──
+  supa.auth.onAuthStateChange(async (event, session) => {
+    if (session && session.user) {
+      currentUser = session.user;
+      // Show user in topbar
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.getElementById('user-chip').style.display    = 'flex';
+      document.getElementById('user-email-label').textContent = session.user.email;
+      // Load cloud data
+      await cloudLoad();
+      renderCal();updateBadges();renderEvList();renderHeatEditor();renderPlanerAll();
+    } else {
+      currentUser = null;
+      document.getElementById('auth-overlay').style.display = 'flex';
+      document.getElementById('user-chip').style.display    = 'none';
+      // Still render with local cache while not logged in
+      renderCal();updateBadges();renderEvList();renderHeatEditor();renderPlanerAll();
+    }
+  });
+});
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function goTo(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sec-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='kalender')renderCal();
+  if(id==='themen')renderEvList();
+  if(id==='tv')renderTV();
+  if(id==='eintraege'){renderPlanerAll();}
+  if(id==='einstellungen')renderHeatEditor();
+}
+
+function calNav(dir){
+  if(view==='monat'){cM+=dir;if(cM>11){cM=0;cY++;}if(cM<0){cM=11;cY--;}}
+  else{weekRef=new Date(weekRef);weekRef.setDate(weekRef.getDate()+dir*7);cY=weekRef.getFullYear();cM=weekRef.getMonth();}
+  renderCal();
+  if(document.getElementById('sec-themen').classList.contains('on'))renderEvList();
+}
+
+function setView(v){
+  view=v;
+  document.getElementById('vt-m').classList.toggle('on',v==='monat');
+  document.getElementById('vt-w').classList.toggle('on',v==='woche');
+  if(v==='woche')weekRef=new Date(TODAY);
+  renderCal();
+}
+
+function renderCal(){if(view==='monat')renderMonth();else renderWeek();}
+
+function getWeekMon(d){
+  const dt=new Date(d);const dow=dt.getDay();
+  dt.setDate(dt.getDate()-(dow===0?6:dow-1));return dt;
+}
+
+// ── MONTH VIEW ─────────────────────────────────────────────────────────────
+function renderMonth(){
+  document.getElementById('cal-title').textContent=ML[cM]+' '+cY;
+  const fd=new Date(cY,cM,1).getDay();
+  const off=fd===0?6:fd-1;
+  const dim=new Date(cY,cM+1,0).getDate();
+  const prevD=new Date(cY,cM,0).getDate();
+  let h='';
+  h+=`<div class="legend">
+    <div class="legend-item"><span class="leg-dot" style="background:var(--blue-l);border:1px solid var(--blue);"></span>Post</div>
+    <div class="legend-item"><span class="leg-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>Thementag</div>
+    <div class="legend-item"><span class="leg-dot" style="background:var(--accent-l);border:1px solid var(--accent);"></span>Talkshow</div>
+  </div>`;
+  h+='<div class="month-grid">';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=>h+=`<div class="dow">${d}</div>`);
+  for(let i=0;i<off;i++){const d=prevD-off+i+1;const ds=fmt(new Date(cY,cM-1,d));h+=`<div class="mday other" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div></div>`;}
+  for(let d=1;d<=dim;d++){
+    const ds=fmt(new Date(cY,cM,d));
+    const isT=d===TODAY.getDate()&&cM===TODAY.getMonth()&&cY===TODAY.getFullYear();
+    const posts=ST.posts.filter(p=>p.date===ds);
+    const evs=THEMES.filter(e=>e.m===cM&&e.d===d);
+    const tvs=ST.tv.filter(t=>t.date===ds);
+    const dayEntries=ST.entries.filter(e=>e.date===ds);
+    let chips='',total=posts.length+evs.length+tvs.length+dayEntries.length,shown=0;
+    const MAX=3;
+    for(const p of posts){if(shown>=MAX)break;chips+=`<div class="mchip mc-post">${platShort(p.platform)}: ${(p.text||'').substring(0,14)}</div>`;shown++;}
+    for(const e of evs){if(shown>=MAX)break;chips+=`<div class="mchip mc-ev">${e.name.substring(0,18)}</div>`;shown++;}
+    for(const t of tvs){if(shown>=MAX)break;chips+=`<div class="mchip mc-tv">${t.show}</div>`;shown++;}
+    for(const en of dayEntries){if(shown>=MAX)break;chips+=`<div class="mchip mc-entry">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,14)}</div>`;shown++;}
+    const more=total-shown>0?`<div class="mday-more">+${total-shown} weitere</div>`:'';
+    h+=`<div class="mday${isT?' today':''}" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div><div class="mday-chips">${chips}${more}</div></div>`;
+  }
+  const trail=(7-(off+dim)%7)%7;
+  for(let i=1;i<=trail;i++){const ds=fmt(new Date(cY,cM+1,i));h+=`<div class="mday other" onclick="openModal('${ds}',null)"><div class="mday-n">${i}</div></div>`;}
+  h+='</div>';
+  h+=postListHTML(false);
+  document.getElementById('cal-body').innerHTML=h;
+}
+
+// ── WEEK VIEW WITH HEATMAP ─────────────────────────────────────────────────
+const HOURS=[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+
+function renderWeek(){
+  const ws=getWeekMon(weekRef);
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(d.getDate()+i);days.push(d);}
+  const f=days[0],l=days[6];
+  document.getElementById('cal-title').textContent=
+    f.getDate()+'. '+MS[f.getMonth()]+' – '+l.getDate()+'. '+MS[l.getMonth()]+' '+l.getFullYear();
+
+  // platform filter bar
+  const platOpts=[
+    {key:'all',label:'Alle Plattformen'},
+    {key:'X/Twitter',label:'X/Twitter',cls:'pf-x'},
+    {key:'Instagram',label:'IG & FB',cls:'pf-ig'},
+    {key:'TikTok',label:'TikTok',cls:'pf-tt'},
+    {key:'YouTube',label:'YouTube',cls:'pf-yt'},
+    {key:'LinkedIn',label:'LinkedIn',cls:'pf-li'},
+  ];
+  let h=`<div class="plat-filter" id="week-plat-filter">`;
+  platOpts.forEach(o=>{
+    const on=weekHeatPlat===(o.key)?'on':'';
+    h+=`<button class="pf-btn ${o.cls||''} ${on}" onclick="setWeekHeatPlat('${o.key}')">${o.label}</button>`;
+  });
+  h+='</div>';
+
+  // heatmap legend — Metricool style
+  h+=`<div class="heat-legend">
+    <span class="heat-legend-label">Engagement:</span>
+    <div class="heat-swatches">
+      <div class="heat-sw heat-0" style="border:1px solid var(--border2);" title="&lt;20%"></div>
+      <div class="heat-sw heat-1" title="20–35%"></div>
+      <div class="heat-sw heat-2" title="36–55%"></div>
+      <div class="heat-sw heat-3" title="56–74%"></div>
+      <div class="heat-sw heat-4" title="75–89%"></div>
+      <div class="heat-sw heat-5" title="90–100%"></div>
+    </div>
+    <span class="heat-legend-label">gering → optimal</span>
+    <span class="heat-note">Quelle: Metricool · dein Account</span>
+  </div>`;
+
+  h+='<div class="week-wrap"><div class="week-grid">';
+  // corner
+  h+='<div class="wg-corner"></div>';
+  // day headers
+  days.forEach(d=>{
+    const isT=d.toDateString()===TODAY.toDateString();
+    h+=`<div class="wg-head${isT?' tod':''}">
+      <div class="wg-head-dow">${DS[d.getDay()]}</div>
+      <div class="wg-head-d">${d.getDate()}</div>
+    </div>`;
+  });
+  // rows
+  HOURS.forEach(hr=>{
+    h+=`<div class="wg-tl">${hr}:00</div>`;
+    days.forEach((d,di)=>{
+      const dow=di;
+      const ds=fmt(d);
+      const isT=d.toDateString()===TODAY.toDateString();
+      const score=weekHeatPlat==='all'
+        ?heatScoreAll(dow,hr,ST.customHeat)
+        :heatScore(weekHeatPlat,dow,hr,ST.customHeat);
+      const pct=getPct(dow,hr,ST.customHeat);
+      const tip=heatTooltip(weekHeatPlat==='all'?'X/Twitter':weekHeatPlat,dow,hr,ST.customHeat);
+
+      const ps=ST.posts.filter(p=>{if(p.date!==ds)return false;const ph=parseInt((p.time||'00').split(':')[0]);return ph===hr;});
+      const evs=THEMES.filter(e=>e.m===d.getMonth()&&e.d===d.getDate()&&hr===8);
+      const tvs=ST.tv.filter(t=>{if(t.date!==ds)return false;const th=parseInt((t.time||'00').split(':')[0]);return th===hr;});
+      const wkEntries=ST.entries.filter(e=>{
+        if(e.date!==ds)return false;
+        if(e.type==='termin'){const eh=parseInt((e.time||'00').split(':')[0]);return eh===hr;}
+        return hr===8; // notiz/aufgabe/idee show at 8am slot
+      });
+      let inner='';
+      let evCount=ps.length+evs.length+tvs.length+wkEntries.length;
+      if(pct>=20&&!evCount){inner+=`<div class="wg-pct">${pct}%</div>`;}
+      ps.forEach((p,i)=>{inner+=`<div class="wg-ev wg-ev-post" style="top:${2+i*15}px;" onclick="editPost(${p.id},event)">${platShort(p.platform)}: ${(p.text||'').substring(0,13)}</div>`;});
+      evs.forEach((e,i)=>{inner+=`<div class="wg-ev wg-ev-ev" style="top:${2+i*15}px;">${e.name.substring(0,14)}</div>`;});
+      tvs.forEach((t,i)=>{inner+=`<div class="wg-ev wg-ev-tv" style="top:${2+i*15}px;">${t.show}</div>`;});
+      wkEntries.forEach((en,i)=>{inner+=`<div class="wg-ev" style="top:${2+(ps.length+evs.length+tvs.length+i)*15}px;background:var(--purple-l);color:var(--purple);border-left:2px solid var(--purple);">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,12)}</div>`;});
+
+      const safeT=tip?tip.replace(/'/g,"\\'").replace(/\n/g,'\\n'):'';
+      const tipAttr=safeT?`onmouseenter="showTip(event,'${safeT}')" onmouseleave="hideTip()"`:'';
+      h+=`<div class="wg-cell heat-${score}${isT?' tod':''}" onclick="openModal('${ds}','${hr}:00')" ${tipAttr}>${inner}</div>`;
+    });
+  });
+  h+='</div></div>'; // close week-grid and week-wrap
+  h+=postListHTML(true,days[0],days[6]);
+  document.getElementById('cal-body').innerHTML=h;
+}
+
+function setWeekHeatPlat(key){
+  weekHeatPlat=key;renderWeek();
+}
+
+// ── TOOLTIP ────────────────────────────────────────────────────────────────
+function showTip(e,text){
+  const t=document.getElementById('ht-tip');
+  t.innerHTML=text.replace(/\n/g,'<br>');
+  t.style.display='block';
+  t.style.left=(e.clientX+12)+'px';
+  t.style.top=(e.clientY-10)+'px';
+}
+function hideTip(){document.getElementById('ht-tip').style.display='none';}
+
+// ── PLATFORM DISPLAY HELPERS ───────────────────────────────────────────────
+function platShort(p){
+  const m={'X/Twitter':'X','Instagram':'IG','Instagram Story':'Story','Instagram Reel':'Reel','Facebook':'FB','TikTok':'TT','YouTube':'YT','YouTube Short':'YT Short','LinkedIn':'LI'};
+  return m[p]||p;
+}
+function platCls(p){
+  const m={'X/Twitter':'p-x','Instagram':'p-ig','Instagram Story':'p-ig','Instagram Reel':'p-ig','Facebook':'p-fb','TikTok':'p-tt','YouTube':'p-yt','YouTube Short':'p-yt','LinkedIn':'p-li'};
+  return m[p]||'p-x';
+}
+function platBg(p){
+  const m={
+    'X/Twitter':       'background:#E8E7EF;color:#1A1A1F;',
+    'Instagram':       'background:rgba(224,123,181,.2);color:var(--pink);',
+    'Instagram Story': 'background:rgba(224,123,181,.2);color:var(--pink);',
+    'Instagram Reel':  'background:rgba(155,123,232,.2);color:var(--purple);',
+    'Facebook':        'background:rgba(91,159,224,.2);color:var(--blue);',
+    'TikTok':          'background:rgba(74,188,212,.2);color:var(--teal);',
+    'YouTube':         'background:rgba(224,91,91,.2);color:var(--red);',
+    'YouTube Short':   'background:rgba(224,91,91,.2);color:var(--red);',
+    'LinkedIn':        'background:rgba(91,159,224,.2);color:var(--blue);',
+  };
+  return m[p]||'background:var(--bg3);color:var(--text2);';
+}
+
+// ── POST LIST HTML ─────────────────────────────────────────────────────────
+function postListHTML(weekOnly,startDay,endDay){
+  const hidePast=ST.settings.hidePastPosts;
+  const nowFull=new Date();
+  let posts=[...ST.posts].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  if(hidePast)posts=posts.filter(p=>new Date(p.date+' '+(p.time||'23:59'))>=nowFull);
+  if(weekOnly&&startDay&&endDay){
+    const s=fmt(startDay),e=fmt(endDay);
+    posts=posts.filter(p=>p.date>=s&&p.date<=e);
+  }
+  const title=weekOnly?'Posts diese Woche':'Alle geplanten Posts';
+  let rows=posts.length?posts.map(p=>{
+    const d=new Date(p.date);
+    const ds=(weekOnly?DL[d.getDay()]+' ':'')+d.getDate()+'.'+(d.getMonth()+1)+'. '+p.time;
+    const prev=(p.anlass?'['+p.anlass+'] ':'')+p.text;
+    return `<div class="post-row">
+      <span class="pplat" style="${platBg(p.platform)}">${platShort(p.platform)}</span>
+      <span class="ptext">${prev}</span>
+      <span class="pwhen">${ds}</span>
+      <button class="pdel" onclick="editPost(${p.id},event)" title="Bearbeiten">✎</button>
+      <button class="pdel" onclick="delPost(${p.id})" title="Löschen">✕</button>
+    </div>`;
+  }).join(''):`<div class="empty" style="padding:1rem 0;">${weekOnly?'Keine Posts in dieser Woche.':'Noch keine Posts geplant. Klicke auf einen Tag oder &ldquo;+ Post planen&rdquo;.'}</div>`;
+  return `<div style="margin-top:20px;"><div style="font-family:var(--serif);font-size:1rem;font-weight:400;margin-bottom:10px;">${title}</div>${rows}</div>`;
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function openModal(dateStr,timeStr,tab){
+  editId=null;
+  const ds=dateStr||fmt(TODAY);
+  document.getElementById('p-date').value=ds;
+  document.getElementById('p-time').value=timeStr||'09:00';
+  document.getElementById('p-text').value='';
+  document.getElementById('p-anlass').value='';
+  document.getElementById('p-tags').value='';
+  document.getElementById('p-hint').style.display='none';
+  document.getElementById('entry-date').value=ds;
+  document.getElementById('entry-title').value='';
+  document.getElementById('entry-note').value='';
+  document.getElementById('entry-time').value='';
+  updateChar();
+  selPlats=['Instagram'];
+  document.querySelectorAll('.pt').forEach(b=>b.classList.toggle('on',b.dataset.p==='Instagram'));
+  updateBestTimeTip();
+  // Show date in modal header
+  const d=new Date(ds);
+  document.getElementById('modal-date-label').textContent=
+    DL[d.getDay()]+', '+d.getDate()+'. '+ML[d.getMonth()]+' '+d.getFullYear();
+  switchModalTab(tab||'post');
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function switchModalTab(tab){
+  document.getElementById('modal-post-tab').style.display=tab==='post'?'block':'none';
+  document.getElementById('modal-entry-tab').style.display=tab==='entry'?'block':'none';
+  document.getElementById('tab-post').classList.toggle('on',tab==='post');
+  document.getElementById('tab-entry').classList.toggle('on',tab==='entry');
+}
+
+function openModalPrefilled(anlass,dateStr){
+  openModal(dateStr||fmt(TODAY),null);
+  document.getElementById('p-anlass').value=anlass;
+  showHint(anlass);
+}
+
+function editPost(id,e){
+  if(e)e.stopPropagation();
+  const p=ST.posts.find(x=>x.id===id);if(!p)return;
+  editId=id;
+  document.getElementById('modal-h').textContent='Post bearbeiten';
+  document.getElementById('p-date').value=p.date;
+  document.getElementById('p-time').value=p.time||'09:00';
+  document.getElementById('p-text').value=p.text;
+  document.getElementById('p-anlass').value=p.anlass||'';
+  document.getElementById('p-tags').value=p.tags||'';
+  selPlats=[p.platform];
+  document.querySelectorAll('.pt').forEach(b=>b.classList.toggle('on',b.dataset.p===p.platform));
+  updateChar();
+  document.getElementById('p-hint').style.display='none';
+  updateBestTimeTip();
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+function closeModalBg(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
+
+function showHint(anlass){
+  let h='';
+  for(const k in HINTS){if(anlass.includes(k)){h=HINTS[k];break;}}
+  if(!h)h='💡 Tipp: Persönliche Geschichte + konkrete Forderung. 2–3 Hashtags, Call-to-Action am Ende.';
+  const box=document.getElementById('p-hint');box.innerHTML=h;box.style.display='block';
+}
+
+function togglePlat(btn){
+  const p=btn.dataset.p;btn.classList.toggle('on');
+  if(btn.classList.contains('on')){if(!selPlats.includes(p))selPlats.push(p);}
+  else{selPlats=selPlats.filter(x=>x!==p);}
+  updateBestTimeTip();
+}
+
+function updateBestTimeTip(){
+  const tip=document.getElementById('best-time-tip');
+  if(!selPlats.length){tip.style.display='none';return;}
+  const plat=selPlats[0];
+  const key=heatKey(plat);
+  // Find best hours across the week from Metricool data (pct >= 70)
+  const bestSlots=[];
+  for(let dow=0;dow<7;dow++){
+    for(const hr of [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]){
+      const pct=getPct(dow,hr,ST.customHeat);
+      if(pct>=70)bestSlots.push({dow,hr,pct});
+    }
+  }
+  // Group top hours ignoring day (aggregate)
+  const hourTotals={};
+  bestSlots.forEach(s=>{hourTotals[s.hr]=(hourTotals[s.hr]||0)+s.pct;});
+  const topHours=Object.entries(hourTotals).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>parseInt(e[0])).sort((a,b)=>a-b);
+  // Group into ranges
+  let ranges=[];let start=null,prev=null;
+  topHours.forEach(h=>{
+    if(start===null){start=h;prev=h;}
+    else if(h===prev+1){prev=h;}
+    else{ranges.push(`${start}–${prev+1} Uhr`);start=h;prev=h;}
+  });
+  if(start!==null)ranges.push(`${start}–${prev+1} Uhr`);
+  // Best days
+  const dayTotals=Array(7).fill(0);
+  bestSlots.forEach(s=>dayTotals[s.dow]+=s.pct);
+  const bestDow=dayTotals.indexOf(Math.max(...dayTotals));
+  const platLabels={'X/Twitter':'X/Twitter','Instagram':'Instagram & FB','TikTok':'TikTok','YouTube':'YouTube','LinkedIn':'LinkedIn'};
+  tip.innerHTML=`📊 <strong>Beste Zeiten laut Metricool:</strong> ${ranges.join(', ')} · Stärkster Tag: ${['Mo','Di','Mi','Do','Fr','Sa','So'][bestDow]}`;
+  tip.style.display='block';
+}
+
+function updateChar(){
+  const t=document.getElementById('p-text').value;
+  const h=document.getElementById('char-hint');
+  h.textContent=t.length+' Zeichen';h.className='char-hint'+(t.length>280?' warn':'');
+}
+
+function savePost(){
+  const date=document.getElementById('p-date').value;
+  const time=document.getElementById('p-time').value;
+  const text=document.getElementById('p-text').value.trim();
+  const anlass=document.getElementById('p-anlass').value.trim();
+  const tags=document.getElementById('p-tags').value.trim();
+  if(!date||!text){alert('Bitte Datum und Text ausfüllen.');return;}
+  if(!selPlats.length){alert('Bitte mindestens eine Plattform wählen.');return;}
+  if(editId!==null){
+    const i=ST.posts.findIndex(p=>p.id===editId);
+    if(i>-1)ST.posts[i]={...ST.posts[i],date,time,text,anlass,tags,platform:selPlats[0]};
+  }else{
+    selPlats.forEach(p=>ST.posts.push({id:Date.now()+Math.random(),platform:p,date,time,text,anlass,tags}));
+  }
+  saveST();closeModal();renderCal();updateBadges();
+  // cloud sync
+  const saved = ST.posts[ST.posts.length-1];
+  showSync('Speichere Post…');
+  cloudSavePost(saved).then(()=>{hideSync();renderCal();});
+}
+
+function delPost(id){
+  cloudDeletePost(id);
+  ST.posts=ST.posts.filter(p=>p.id!==id);
+  saveST();renderCal();updateBadges();
+}
+
+// ── HEATMAP EDITOR (settings) ───────────────────────────────────────────────
+function renderHeatEditor(){
+  const EDIT_HOURS=[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
+  const DOWS=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  // Metricool pink scale for editor
+  const heatBg=['#25252E','#3D2535','#5C2442','#852550','#B52B5E','#E8336D'];
+  let h=`<div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:.7rem;">`;
+  h+=`<tr><th style="padding:3px 6px;color:var(--text3);font-weight:500;text-align:right;"></th>`;
+  DOWS.forEach(d=>h+=`<th style="padding:3px 8px;color:var(--text3);font-weight:500;text-align:center;">${d}</th>`);
+  h+='</tr>';
+  EDIT_HOURS.forEach(hr=>{
+    h+=`<tr><td style="padding:2px 8px 2px 0;color:var(--text3);text-align:right;white-space:nowrap;">${hr}:00</td>`;
+    for(let dow=0;dow<7;dow++){
+      const pct=getPct(dow,hr,ST.customHeat);
+      const level=pctToHeat(pct);
+      const bg=heatBg[level];
+      const textClr=level>=3?'rgba(120,30,60,.8)':'var(--text3)';
+      h+=`<td style="padding:2px;text-align:center;">
+        <div style="width:36px;height:24px;border-radius:4px;cursor:default;background:${bg};border:1px solid rgba(200,100,130,.2);display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:${textClr};font-weight:500;">${pct?pct+'%':''}</div>
+      </td>`;
+    }
+    h+='</tr>';
+  });
+  h+=`</table></div>`;
+  h+=`<p style="font-size:.72rem;color:var(--text3);margin-top:8px;">Diese Werte stammen aus deinen Metricool-Daten. Um sie zu aktualisieren, lade neue Screenshots in Claude hoch.</p>`;
+  document.getElementById('heat-editor').innerHTML=h;
+}
+
+// ── TV ──────────────────────────────────────────────────────────────────────
+function tvSearch(show){window.open('https://www.google.com/search?q='+encodeURIComponent(show+' nächste Sendung Thema '+new Date().getFullYear()),'_blank');}
+function tvSearchAll(){window.open('https://www.google.com/search?q='+encodeURIComponent('(Maischberger OR "Hart aber fair" OR "Markus Lanz" OR "Maybrit Illner" OR "Dunja Hayali" OR "phoenix runde") nächste Sendung'),'_blank');}
+
+function addTV(){
+  const show=document.getElementById('tv-show').value;
+  const date=document.getElementById('tv-date').value;
+  const time=document.getElementById('tv-time').value;
+  const topic=document.getElementById('tv-topic').value.trim();
+  const guests=document.getElementById('tv-guests').value.trim();
+  const channel=document.getElementById('tv-channel').value.trim();
+  const tags=document.getElementById('tv-tags').value.trim().split(/[,\s]+/).filter(Boolean);
+  if(!date||!topic){alert('Bitte Datum und Thema ausfüllen.');return;}
+  ST.tv.push({id:Date.now(),show,date,time,topic,guests,channel,tags});saveST();
+  document.getElementById('tv-topic').value='';
+  document.getElementById('tv-guests').value='';
+  document.getElementById('tv-channel').value='';
+  document.getElementById('tv-tags').value='';
+  document.getElementById('tv-date').value=fmt(TODAY);
+  renderTV();renderCal();updateBadges();
+}
+function deleteTV(id){ST.tv=ST.tv.filter(t=>t.id!==id);saveST();renderTV();renderCal();updateBadges();}
+
+// ── TV TABLE RENDERER ───────────────────────────────────────────────────────
+const SHOWS_ORDER=['Maischberger','Hart aber fair','Markus Lanz','Maybrit Illner','Dunja Hayali','phoenix runde'];
+const SHOW_META={
+  'Maischberger':    {channel:'ARD',  color:'#C0392B'},
+  'Hart aber fair':  {channel:'ARD',  color:'#E67E22'},
+  'Markus Lanz':     {channel:'ZDF',  color:'#2980B9'},
+  'Maybrit Illner':  {channel:'ZDF',  color:'#8E44AD'},
+  'Dunja Hayali':    {channel:'ZDF',  color:'#16A085'},
+  'phoenix runde':   {channel:'Phoenix', color:'#D35400'},
+};
+
+function renderTV(){
+  const container=document.getElementById('tv-table-container');
+  const showPast=ST.settings.showPastTV!==false;
+  const now=new Date(); now.setHours(0,0,0,0);
+  const nowFull=new Date();
+
+  if(!ST.tv.length){
+    container.innerHTML='<div class="empty">Noch keine Sendungen eingetragen. Nutze die KI-Suche oben oder trage Sendungen manuell ein.</div>';
+    updateBadges();
+    return;
+  }
+
+  // Collect all unique dates across all entries, sorted
+  let allDates=[...new Set(ST.tv.map(t=>t.date))].sort();
+  if(!showPast) allDates=allDates.filter(d=>new Date(d)>=now);
+
+  // Build lookup: date → show → entry
+  const lookup={};
+  ST.tv.forEach(t=>{
+    if(!lookup[t.date])lookup[t.date]={};
+    if(!lookup[t.date][t.show])lookup[t.date][t.show]=[];
+    lookup[t.date][t.show].push(t);
+  });
+
+  // Which shows actually have data?
+  const activeShows=SHOWS_ORDER.filter(s=>ST.tv.some(t=>t.show===s));
+  // Also include any "Sonstige" entries
+  const otherShows=[...new Set(ST.tv.map(t=>t.show).filter(s=>!SHOWS_ORDER.includes(s)))];
+  const cols=[...activeShows,...otherShows];
+
+  let h='<div class="tv-table-wrap"><table class="tv-table">';
+
+  // Header row
+  h+='<thead><tr>';
+  h+='<th style="width:90px;font-size:.7rem;color:var(--text3);">Datum</th>';
+  cols.forEach(show=>{
+    const meta=SHOW_META[show]||{channel:'',color:'var(--text2)'};
+    h+=`<th class="show-head">
+      <span style="display:inline-block;width:3px;height:14px;background:${meta.color};border-radius:2px;vertical-align:middle;margin-right:6px;"></span>${show}
+      <span class="show-channel">${meta.channel}</span>
+    </th>`;
+  });
+  h+='</tr></thead>';
+
+  // Body rows
+  h+='<tbody>';
+  allDates.forEach(dateStr=>{
+    const d=new Date(dateStr);
+    const isPast=new Date(dateStr)<now;
+    const isToday=d.toDateString()===TODAY.toDateString();
+    const isThisWeek=d>=now&&d<=new Date(now.getTime()+7*86400000);
+    const dowLabel=DL[d.getDay()];
+    const dateLabel=d.getDate()+'. '+MS[d.getMonth()];
+    const rowClass=isToday?'tv-row-today':isPast?'tv-row-past':'';
+
+    h+=`<tr class="${rowClass}">`;
+
+    // Date column
+    h+=`<td class="date-col">
+      <strong>${dowLabel.substring(0,2)}</strong>
+      <span style="display:block;">${dateLabel}</span>
+      ${isToday?'<span class="tv-badge-today">Heute</span>':''}
+      ${isPast&&!isToday?'<span class="tv-badge-past">Gelaufen</span>':''}
+      ${isThisWeek&&!isToday?'<span style="display:inline-block;background:var(--accent-l);color:var(--accent);font-size:.63rem;font-weight:500;padding:1px 6px;border-radius:8px;margin-left:4px;">Diese Woche</span>':''}
+    </td>`;
+
+    // Show columns
+    cols.forEach(show=>{
+      const entries=(lookup[dateStr]||{})[show]||[];
+      if(!entries.length){
+        h+=`<td><span class="tv-cell-empty">—</span></td>`;
+      } else {
+        h+='<td>';
+        entries.forEach(t=>{
+          const anlass=(t.show+' ('+dowLabel+', '+dateLabel+')').replace(/'/g,"\\'");
+          const tags2=(t.tags||[]).map(tg=>`<span class="tag t-${tg}">${tg}</span>`).join('');
+          const timeStr=t.time?`<span style="font-size:.7rem;color:var(--text3);margin-bottom:4px;display:block;">🕐 ${t.time} Uhr</span>`:'';
+          const guestsHtml=t.guests
+            ?`<div class="tv-cell-guests"><strong>Gäste:</strong> ${t.guests}</div>`:'';
+          h+=`<div style="margin-bottom:${entries.length>1?'10px':'0'};">
+            ${timeStr}
+            <div class="tv-cell-topic">${t.topic}</div>
+            ${guestsHtml}
+            ${tags2?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:5px;">${tags2}</div>`:''}
+            <div class="tv-cell-actions">
+              <button class="btn btn-sm" style="font-size:.68rem;padding:2px 8px;" onclick="openModalPrefilled('${anlass}','${t.date}')">Post planen</button>
+              <button class="btn btn-sm btn-red" style="font-size:.68rem;padding:2px 8px;" onclick="deleteTV(${t.id})">✕</button>
+            </div>
+          </div>`;
+        });
+        h+='</td>';
+      }
+    });
+    h+='</tr>';
+  });
+
+  h+='</tbody></table></div>';
+  container.innerHTML=h;
+  updateBadges();
+}
+
+// ── THEMENTAGE ─────────────────────────────────────────────────────────────
+const THEMES=[
+  {m:0,d:1,name:'Neujahr — Jahresbilanz Familienpolitik',tags:['familie','soziales'],desc:'Bilanz des vergangenen Jahres — Was wurde erreicht, was fehlt noch?'},
+  {m:1,d:14,name:'Valentinstag',tags:['familie'],desc:'Partnerschaft und Familienrecht — Ehegattenrecht, gleichgeschlechtliche Ehe, Adoptionsrecht.'},
+  {m:2,d:8,name:'Internationaler Frauentag',tags:['frauen'],desc:'Gleichstellung, Gender Pay Gap, Vereinbarkeit von Familie und Beruf.'},
+  {m:2,d:20,name:'Frühlingsanfang',tags:['familie','kinder'],desc:'Natur- und Umweltschutz für künftige Generationen.'},
+  {m:3,d:7,name:'Weltgesundheitstag (WHO)',tags:['kinder','soziales'],desc:'Kindergesundheit, Präventionsprogramme, Kinderärzte auf dem Land.'},
+  {m:3,d:22,name:'Tag der Erde',tags:['kinder','soziales'],desc:'Klimagerechtigkeit für Kinder und künftige Generationen.'},
+  {m:3,d:23,name:'Welttag des Buches',tags:['bildung','kinder'],desc:'Leseförderung, Bibliotheksfinanzierung, Bildungszugang.'},
+  {m:4,d:1,name:'Tag der Arbeit',tags:['soziales','familie'],desc:'Elternzeit, Minijob-Reform, Vereinbarkeit von Beruf und Familie.'},
+  {m:4,d:5,name:'Europäischer Protesttag (Inklusion)',tags:['soziales','kinder'],desc:'Inklusion für Familien mit Kindern mit Behinderung.'},
+  {m:4,d:15,name:'Internationaler Tag der Familie (UN)',tags:['familie'],desc:'Kernthema! Familienpolitische Statements und Positionierungen.'},
+  {m:4,d:25,name:'Weltelterntag (UN)',tags:['familie'],desc:'Wertschätzung von Elternarbeit, Elterngeldreform, Vätermonate.'},
+  {m:5,d:1,name:'Internationaler Kindertag',tags:['kinder'],desc:'Kernthema! Kinderarmut, Kinderrechte im GG, Kindergrundsicherung.'},
+  {m:5,d:5,name:'Weltumwelttag (UN)',tags:['kinder','soziales'],desc:'Umweltschutz als Kinderschutz — Klimawandel & Zukunftsgenerationen.'},
+  {m:5,d:20,name:'Weltflüchtlingstag (UNHCR)',tags:['soziales','kinder'],desc:'Geflüchtete Familien, Integration, Kita-Zugang.'},
+  {m:7,d:12,name:'Internationaler Jugendtag (UN)',tags:['kinder','bildung'],desc:'Jugendpolitik, Ausbildungsplätze, psychische Gesundheit.'},
+  {m:8,d:8,name:'Internationaler Alphabetisierungstag',tags:['bildung'],desc:'Bildungsgerechtigkeit, Lesekompetenz, Sprachförderung.'},
+  {m:8,d:20,name:'Weltkindertag (UNICEF)',tags:['kinder'],desc:'UN-Kinderrechtskonvention, Kindeswohl, internationale Perspektive.'},
+  {m:9,d:3,name:'Tag der deutschen Einheit',tags:['soziales','familie'],desc:'Ost-West-Unterschiede, Kita-Ausbau-Bilanz.'},
+  {m:9,d:20,name:'Weltspartag',tags:['familie','soziales'],desc:'Kinderarmut, Kindergrundsicherung, Altersvorsorge.'},
+  {m:10,d:19,name:'Internationaler Männertag',tags:['familie'],desc:'Väter in der Familienpolitik, Vätermonate, Rollenbilder.'},
+  {m:10,d:20,name:'Weltkindertag (Deutschland)',tags:['kinder'],desc:'Kernthema! Maximale Aufmerksamkeit.'},
+  {m:11,d:3,name:'Tag der Behinderung',tags:['soziales','kinder'],desc:'Inklusion in Schulen und Kitas, Barrierefreiheit.'},
+  {m:11,d:10,name:'Tag der Menschenrechte',tags:['soziales','kinder'],desc:'Kinderrechte im Grundgesetz, soziale Grundrechte.'},
+  {m:11,d:25,name:'Internationaler Tag gegen Gewalt an Frauen',tags:['frauen','familie'],desc:'Häusliche Gewalt, Frauenhäuser, Schutz von Kindern.'},
+  // SENIOREN
+  {m:0,d:27,name:'Tag des Gedenkens an die Opfer des NS',tags:['senioren','ostdeutschland'],desc:'Erinnerungskultur, Zeitzeugen, antifaschistische Tradition — besonders relevant im ostdeutschen Kontext.'},
+  {m:3,d:28,name:'Tag der älteren Generation (DDR-Tradition)',tags:['senioren','ostdeutschland'],desc:'Wertschätzung älterer Menschen — in Ostdeutschland traditionell stark verwurzelt. Rente, Pflege, Einsamkeit.'},
+  {m:4,d:8,name:'Tag der Befreiung (8. Mai)',tags:['senioren','ostdeutschland'],desc:'Antifaschismus, Erinnerungskultur, Verantwortung gegenüber der Kriegsgeneration.'},
+  {m:5,d:15,name:'Weltseniorentag (Österreich/CH) / Aktionstag Pflege',tags:['senioren','soziales'],desc:'Pflegenotstand, Pflegelöhne, Pflegeversicherungsreform, Würde im Alter.'},
+  {m:7,d:21,name:'Welt-Alzheimertag (21. September)',tags:['senioren','soziales'],desc:'Demenz, Pflegebedarf, Belastung pflegender Angehöriger — häufig Frauen und Töchter.'},
+  {m:8,d:21,name:'Internationaler Aktionstag älterer Menschen (UN-Vorbereitungstag)',tags:['senioren'],desc:'Altersarmut (betrifft bes. ostdeutsche Frauen), Rentenungerechtigkeit Ost/West, Einsamkeit.'},
+  {m:9,d:1,name:'Internationaler Tag der älteren Menschen (UN)',tags:['senioren','soziales'],desc:'Kernthema Seniorenpolitik! Altersarmut, Rente, Pflege, gesellschaftliche Teilhabe, Recht auf Würde.'},
+  {m:10,d:18,name:'Welt-Alzheimertag (18. Oktober, dt. Aktionstag)',tags:['senioren','familie'],desc:'Demenzerkrankungen, Unterstützung pflegender Familien, Ausbau der Betreuungsinfrastruktur.'},
+  // OSTDEUTSCHLAND
+  {m:2,d:18,name:'Bundestagswahl-Jahrestag 1990',tags:['ostdeutschland'],desc:'Erste freie Wahl in der DDR — Jahrestag der demokratischen Wende, Transformationserfahrungen.'},
+  {m:4,d:12,name:'Tag der Befreiung Thüringens (Kriegsende in Thüringen)',tags:['ostdeutschland','senioren'],desc:'Regionales Gedenken, Zeitzeugen, antifaschistische Erinnerungskultur in Thüringen.'},
+  {m:7,d:17,name:'Tag des Gedenkens an den Aufstand vom 17. Juni 1953',tags:['ostdeutschland'],desc:'Volksaufstand in der DDR — Zivilcourage, Freiheitsstreben, Aufarbeitung der SED-Diktatur.'},
+  {m:8,d:13,name:'Jahrestag Mauerbau (13. August 1961)',tags:['ostdeutschland'],desc:'Teilung Deutschlands, Familientrennung, persönliche Biografien — emotionales Thema für Ostdeutsche.'},
+  {m:9,d:7,name:'Jahrestag DDR-Gründung (7. Oktober 1949)',tags:['ostdeutschland'],desc:'Kritische Auseinandersetzung mit DDR-Geschichte, Transformationserzählungen, ostdeutsche Identität.'},
+  {m:9,d:9,name:'Jahrestag der Montagsdemonstrationen (Leipzig, 9. Okt. 1989)',tags:['ostdeutschland'],desc:'Friedliche Revolution, Zivilcourage, „Wir sind das Volk" — ostdeutsche Demokratiegeschichte.'},
+  {m:9,d:31,name:'Jahrestag der Deutschen Einheit (Vorabend)',tags:['ostdeutschland','soziales'],desc:'Gleichwertige Lebensverhältnisse, Rentenungerechtigkeit Ost/West, strukturelle Benachteiligung, Stolz auf die Friedliche Revolution.'},
+  {m:10,d:9,name:'Jahrestag des Mauerfalls (9. November 1989)',tags:['ostdeutschland'],desc:'Kernthema! Mauerfall, Freiheit, Einheitsbilanz — Chancen und Enttäuschungen der Ostdeutschen 35 Jahre danach.'},
+];
+const HINTS={
+  'Internationaler Kindertag':'💡 Konkrete Zahl nennen (2,8 Mio. Kinder in Armut). Klare Forderung zur Kindergrundsicherung.',
+  'Internationaler Frauentag':'💡 Persönliches Statement + politische Forderung zur Vereinbarkeit. Infografik zur Lohnlücke auf Instagram.',
+  'Internationaler Tag der Familie':'💡 Bild mit Familienmotiv + konkretes Vorhaben benennen.',
+  'Weltkindertag':'💡 Maximale Aufmerksamkeit heute! Kinderrechte im GG kombinieren.',
+  'Tag der Arbeit':'💡 Elternzeit-Statistik: Nur 25% der Väter nehmen sie.',
+  'Internationaler Männertag':'💡 Vätermonate, neue Rollenbilder — klare Position.',
+  'Tag gegen Gewalt an Frauen':'💡 Häusliche Gewalt ist Kinderschutzthema. Frauenhäuser-Kapazitäten nennen.',
+};
+
+function setEvF(f,btn){
+  evF=f;
+  document.querySelectorAll('#ev-filters button').forEach(b=>{
+    const on=b.dataset.f===f;
+    b.style.background=on?'var(--text)':'';b.style.color=on?'var(--bg)':'';b.style.borderColor=on?'var(--text)':'';
+  });
+  renderEvList();
+}
+function renderEvList(){
+  document.getElementById('cal-title2').textContent=ML[cM]+' '+cY;
+  const now=new Date();now.setHours(0,0,0,0);
+  let evs=THEMES.filter(e=>e.m===cM);
+  if(evF!=='alle')evs=evs.filter(e=>e.tags.includes(evF));
+  evs.sort((a,b)=>a.d-b.d);
+  const el=document.getElementById('ev-list');
+  if(!evs.length){el.innerHTML='<div class="empty">Keine Thementage für diesen Filter in diesem Monat.</div>';return;}
+  el.innerHTML=evs.map(e=>{
+    const future=new Date(cY,e.m,e.d)>=now;
+    const dateStr=fmt(new Date(cY,e.m,e.d));
+    const anlass=e.name.replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:flex-start;gap:13px;padding:13px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:7px;">
+      <div style="min-width:40px;text-align:center;background:var(--bg2);border-radius:8px;padding:5px 3px;">
+        <div style="font-family:var(--serif);font-size:1.2rem;line-height:1;">${e.d}</div>
+        <div style="font-size:.64rem;color:var(--text3);text-transform:uppercase;">${MS[e.m]}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.88rem;font-weight:500;">${e.name}</div>
+        <div style="font-size:.77rem;color:var(--text2);margin-top:3px;line-height:1.55;">${e.desc}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${e.tags.map(t=>`<span class="tag t-${t}">${t}</span>`).join('')}</div>
+      </div>
+      ${future?`<div><button class="btn btn-sm" onclick="openModalPrefilled('${anlass}','${dateStr}')">Post planen</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── BADGES ─────────────────────────────────────────────────────────────────
+function updateBadges(){
+  const now=new Date();now.setHours(0,0,0,0);
+  const week=new Date(now);week.setDate(week.getDate()+7);
+  const tv7=ST.tv.filter(t=>{const d=new Date(t.date);return d>=now&&d<=week;}).length;
+  const ev7=THEMES.filter(e=>{const d=new Date(new Date().getFullYear(),e.m,e.d);return d>=now&&d<=week;}).length;
+  const s=(id,n)=>{const el=document.getElementById(id);el.textContent=n;el.className='nbadge'+(n>0?' hot':'');};
+  s('nb-posts',ST.posts.length);s('nb-ev',ev7);s('nb-tv',tv7);
+  // Planer: count upcoming entries (today + future)
+  const now2=new Date();now2.setHours(0,0,0,0);
+  const planerUpcoming=(ST.entries||[]).filter(e=>new Date(e.date)>=now2&&!e.done).length;
+  const nbP=document.getElementById('nb-planer');
+  if(nbP){nbP.textContent=planerUpcoming;nbP.className='nbadge'+(planerUpcoming>0?' hot':'');}
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function saveSetting(k,v){ST.settings[k]=v;saveST();renderTV();}
+function saveApiKey(){
+  const k=document.getElementById('api-key-inp').value.trim();
+  if(!k){alert('Bitte einen Key eingeben.');return;}
+  localStorage.setItem('smv5_apikey',k);
+  alert('API-Key gespeichert. Du kannst jetzt Sendungen abrufen und Captions generieren.');
+}
+function clearApiKey(){localStorage.removeItem('smv5_apikey');document.getElementById('api-key-inp').value='';alert('API-Key gelöscht.');}
+function getApiKey(){return localStorage.getItem('smv5_apikey')||'';}
+function exportData(){
+  const blob=new Blob([JSON.stringify({posts:ST.posts,tv:ST.tv},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='smplaner-export-'+fmt(TODAY)+'.json';a.click();
+}
+function clearData(){
+  if(!confirm('Alle Posts und Sendungen wirklich löschen?'))return;
+  ST.posts=[];ST.tv=[];ST.entries=[];saveST();renderCal();renderTV();updateBadges();
+}
+
+// ── CLAUDE SEARCH LINK ────────────────────────────────────────────────────
+function openClaudeSearch(e){
+  e.preventDefault();
+  const today=fmt(new Date());
+  const query=`Suche gründlich nach den nächsten Sendeterminen für diese 6 Talkshows in den nächsten 14 Tagen (ab ${today}): Maischberger (ARD), Hart aber fair (ARD), Markus Lanz (ZDF), Maybrit Illner (ZDF), Dunja Hayali (ZDF), phoenix runde.
+
+Recherchiere für jede Sendung: exaktes Datum, Uhrzeit, vollständiges Thema und ALLE angekündigten Gäste mit vollem Namen und Funktion/Partei. Suche auch auf den jeweiligen Senderwebseiten (daserste.de, zdf.de, phoenix.de) und aktuellen Nachrichtenquellen.
+
+Gib das Ergebnis ausschließlich als JSON-Array aus — keine Einleitung, kein Text davor oder danach, keine Markdown-Backticks, nur das Array:
+
+[{"show":"Sendungsname","channel":"Sender","date":"JJJJ-MM-TT","time":"HH:MM","topic":"Vollständiges Thema der Sendung","guests":"Vorname Nachname (Partei/Funktion), Vorname Nachname (Funktion)","tags":["familie"],"relevant":true}]
+
+Erlaubte Tags: familie, kinder, soziales, bildung, frauen, senioren, ostdeutschland. Setze relevant=true wenn das Thema für Familien-, Sozial- oder Seniorenpolitik relevant ist. Fülle alle Felder so vollständig wie möglich aus — bei unbekannten Gästen schreibe "noch nicht bekannt", lasse das Feld aber niemals leer.`;
+  const url='https://claude.ai/new?q='+encodeURIComponent(query);
+  window.open(url,'_blank');
+}
+
+// ── JSON IMPORT ────────────────────────────────────────────────────────────
+function importFromJSON(){
+  const raw=document.getElementById('tv-json-input').value.trim();
+  const status=document.getElementById('tv-import-status');
+  if(!raw){alert('Bitte zuerst den JSON-Block aus Claude einfügen.');return;}
+
+  // Strip markdown code fences if user copied them too
+  const clean=raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+
+  let shows;
+  try{
+    shows=JSON.parse(clean);
+    if(!Array.isArray(shows))throw new Error('Kein Array');
+  } catch(err){
+    alert('Das JSON konnte nicht gelesen werden.\n\nTipp: Kopiere nur den Inhalt zwischen [ und ] aus dem Claude-Chat, ohne die ```json Umrandung.\n\nFehler: '+err.message);
+    return;
+  }
+
+  let added=0, skipped=0;
+  shows.forEach(s=>{
+    if(!s.show||!s.date){skipped++;return;}
+    // Avoid duplicates: same show + same date
+    const exists=ST.tv.some(t=>t.show===s.show&&t.date===s.date);
+    if(exists){skipped++;return;}
+    ST.tv.push({
+      id: Date.now()+Math.random(),
+      show:    s.show    ||'',
+      channel: s.channel ||'',
+      date:    s.date    ||'',
+      time:    s.time    ||'',
+      topic:   s.topic   ||'',
+      guests:  s.guests  ||'',
+      tags:    Array.isArray(s.tags)?s.tags:[],
+    });
+    added++;
+  });
+
+  saveST(); renderTV(); renderCal(); updateBadges();
+  showSync('Synchronisiere…');
+  Promise.all(ST.tv.slice(-added).map(t=>cloudSaveTV(t))).then(()=>hideSync());
+  document.getElementById('tv-json-input').value='';
+
+  status.textContent = added>0
+    ? `✓ ${added} Sendung${added!==1?'en':''} importiert${skipped>0?' ('+skipped+' übersprungen)':''}`
+    : `Keine neuen Sendungen — ${skipped} bereits vorhanden.`;
+  status.style.display='inline';
+  setTimeout(()=>status.style.display='none', 4000);
+}
+
+// ── AI: CAPTION GENERATOR ──────────────────────────────────────────────────
+async function generateCaptions(){
+  const key=getApiKey();
+  if(!key){
+    alert('Bitte zuerst deinen Anthropic API-Key unter Einstellungen eintragen.');
+    return;
+  }
+  const anlass=document.getElementById('p-anlass').value.trim();
+  const existingText=document.getElementById('p-text').value.trim();
+  const plat=selPlats[0]||'Instagram';
+  const tags=document.getElementById('p-tags').value.trim();
+
+  if(!anlass&&!existingText){
+    alert('Bitte zuerst einen Anlass oder Stichworte im Textfeld eingeben.');
+    return;
+  }
+
+  const btn=document.getElementById('caption-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="ai-spin"></span> Generiere…';
+  const resultsEl=document.getElementById('caption-results');
+  resultsEl.innerHTML='';
+
+  const platInstructions={
+    'Instagram':'Instagram Post: emotional, persönlich, 150–200 Wörter, 3–5 Hashtags am Ende',
+    'Instagram Story':'Instagram Story: sehr kurz, max. 3 Sätze, mit Emoji, Call-to-Action',
+    'Instagram Reel':'Instagram Reel Caption: Hook in Zeile 1, max. 150 Zeichen sichtbar, dann mehr',
+    'X/Twitter':'X/Twitter: prägnant, max. 280 Zeichen, meinungsstark, 1–2 Hashtags',
+    'Facebook':'Facebook: ausführlicher, journalistischer Ton, gerne mit Frage ans Ende',
+    'TikTok':'TikTok Caption: sehr kurz, max. 150 Zeichen, Trending-Hashtags',
+    'LinkedIn':'LinkedIn: professionell, Expertise zeigen, 200–300 Wörter',
+    'YouTube':'YouTube Beschreibung: SEO-optimiert, erste 2 Sätze als Hook, Keywords',
+    'YouTube Short':'YouTube Short: 1–2 Sätze, direkter Aufruf',
+  };
+
+  const prompt=`Du schreibst Social-Media-Texte für einen deutschen Politiker mit Schwerpunkt Familienpolitik.
+
+Plattform: ${plat} (${platInstructions[plat]||'allgemein'})
+Anlass/Thema: ${anlass||'(nicht angegeben)'}
+${existingText?'Vorhandener Text/Stichworte: '+existingText:''}
+${tags?'Hashtags/Kontext: '+tags:''}
+
+Erstelle GENAU 3 verschiedene Caption-Varianten:
+- Variante 1: Emotional & persönlich (storytelling, eigene Erfahrung/Begegnung)
+- Variante 2: Sachlich & fordernd (Fakten, klare politische Position, Handlungsaufruf)
+- Variante 3: Dialogisch & einladend (Frage an die Community, Meinung einholen)
+
+Antworte NUR mit JSON, kein erklärender Text, keine Backticks:
+[
+  {"label": "Emotional & persönlich", "text": "...caption text..."},
+  {"label": "Sachlich & fordernd", "text": "...caption text..."},
+  {"label": "Dialogisch & einladend", "text": "...caption text..."}
+]
+
+Ton: authentisch, warm, direkt. Kein Polit-Sprech. Duzen oder Siezen je nach Plattform-Konvention.`;
+
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1200,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API-Fehler '+resp.status);}
+    const data=await resp.json();
+    const textBlock=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const clean=textBlock.replace(/```json|```/g,'').trim();
+    const captions=JSON.parse(clean);
+
+    let h='<div class="caption-results">';
+    captions.forEach((c,i)=>{
+      const escaped=c.text.replace(/`/g,"'").replace(/\\/g,'\\\\').replace(/"/g,'&quot;');
+      h+=`<div class="caption-card" onclick="useCaption(this)" data-text="${escaped}">
+        <div class="caption-label">${c.label}</div>
+        <p>${c.text}</p>
+        <span class="caption-use">→ Übernehmen</span>
+      </div>`;
+    });
+    h+='</div>';
+    resultsEl.innerHTML=h;
+
+  } catch(err){
+    resultsEl.innerHTML=`<div class="ai-error">Fehler: ${err.message}</div>`;
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M18 2v4m2-2h-4"/></svg> Caption-Vorschläge generieren';
+  }
+}
+
+function useCaption(card){
+  const text=card.getAttribute('data-text').replace(/&quot;/g,'"');
+  document.getElementById('p-text').value=text;
+  updateChar();
+  document.getElementById('caption-results').innerHTML='<div style="font-size:.78rem;color:var(--accent);padding:4px 0;">✓ Text übernommen — du kannst ihn noch bearbeiten.</div>';
+}
+// ── TAGESPLANER ────────────────────────────────────────────────────────────
+if(!ST.entries)ST.entries=[];
+saveST();
+
+let planerDate=new Date(TODAY); // currently selected day
+let planerCalYear=TODAY.getFullYear();
+let planerCalMonth=TODAY.getMonth();
+let selectedEntryType='notiz';
+
+const ENTRY_ICONS={notiz:'📝',termin:'📅',aufgabe:'✅',idee:'💡'};
+const ENTRY_LABELS={notiz:'Notiz',termin:'Termin',aufgabe:'Aufgabe',idee:'Idee'};
+
+function setEntryType(btn){
+  selectedEntryType=btn.dataset.t;
+  document.querySelectorAll('.etype-btn').forEach(b=>b.classList.toggle('on',b===btn));
+  // show time field only for Termin
+  const tr=document.getElementById('entry-time-row');
+  tr.style.cssText=selectedEntryType==='termin'?'display:flex;flex-direction:column;gap:5px;':'display:none!important;';
+}
+
+function planerNav(dir){
+  planerDate=new Date(planerDate);
+  planerDate.setDate(planerDate.getDate()+dir);
+  planerCalYear=planerDate.getFullYear();
+  planerCalMonth=planerDate.getMonth();
+  renderPlanerDay();
+  renderPlanerMiniCal();
+}
+
+function planerGoToday(){
+  planerDate=new Date(TODAY);
+  planerCalYear=TODAY.getFullYear();
+  planerCalMonth=TODAY.getMonth();
+  renderPlanerDay();
+  renderPlanerMiniCal();
+}
+
+function planerCalNav(dir){
+  planerCalMonth+=dir;
+  if(planerCalMonth>11){planerCalMonth=0;planerCalYear++;}
+  if(planerCalMonth<0){planerCalMonth=11;planerCalYear--;}
+  renderPlanerMiniCal();
+}
+
+function planerSelectDay(dateStr){
+  planerDate=new Date(dateStr);
+  renderPlanerDay();
+  renderPlanerMiniCal();
+}
+
+function saveEntry(){
+  const title=document.getElementById('entry-title').value.trim();
+  const note=document.getElementById('entry-note').value.trim();
+  const time=document.getElementById('entry-time').value;
+  if(!title){alert('Bitte einen Titel eingeben.');return;}
+  const entryDate=document.getElementById('entry-date').value||fmt(TODAY);
+  ST.entries.push({
+    id:Date.now()+Math.random(),
+    date:entryDate,
+    type:selectedEntryType,
+    title,note,time,
+    done:false,
+  });
+  saveST();
+  document.getElementById('entry-title').value='';
+  document.getElementById('entry-note').value='';
+  document.getElementById('entry-time').value='';
+  closeModal();
+  renderCal();
+  renderPlanerAll();
+  updateBadges();
+  const newEntry=ST.entries[ST.entries.length-1];
+  showSync('Speichere Eintrag…');
+  cloudSaveEntry(newEntry).then(()=>hideSync());
+}
+
+function toggleEntryDone(id){
+  const e=ST.entries.find(x=>x.id===id);
+  if(e){
+    e.done=!e.done;saveST();
+    cloudSaveEntry(e);
+    renderCal();renderPlanerAll();
+  }
+}
+
+function deleteEntry(id){
+  ST.entries=ST.entries.filter(x=>x.id!==id);
+  saveST();renderPlanerDay();renderPlanerMiniCal();renderPlanerAll();updateBadges();
+}
+
+function renderPlanerDay(){
+  const ds=fmt(planerDate);
+  const isToday=ds===fmt(TODAY);
+  const label=DL[planerDate.getDay()]+', '+planerDate.getDate()+'. '+ML[planerDate.getMonth()]+' '+planerDate.getFullYear();
+  document.getElementById('planer-date-label').textContent=label;
+  document.getElementById('planer-entries-title').textContent=
+    'Einträge für '+(isToday?'heute':'diesen Tag');
+
+  const entries=ST.entries.filter(e=>e.date===ds)
+    .sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  const list=document.getElementById('planer-entries-list');
+  if(!entries.length){
+    list.innerHTML='<div class="empty" style="padding:1.2rem 0;">Keine Einträge für diesen Tag.</div>';
+    return;
+  }
+  list.innerHTML=entries.map(e=>`
+    <div class="entry-card${e.done?' entry-done':''}">
+      <div class="entry-icon">${ENTRY_ICONS[e.type]||'📝'}</div>
+      <div class="entry-body">
+        <div class="entry-title">${e.title}</div>
+        ${e.note?`<div class="entry-note">${e.note}</div>`:''}
+        <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}</div>
+      </div>
+      <div class="entry-actions">
+        ${e.type==='aufgabe'?`<button class="btn btn-sm" onclick="toggleEntryDone(${e.id})" title="${e.done?'Als offen markieren':'Als erledigt markieren'}">${e.done?'↩':'✓'}</button>`:''}
+        <button class="pdel" onclick="deleteEntry(${e.id})" title="Löschen">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderPlanerMiniCal(){
+  document.getElementById('planer-mini-cal-title').textContent=ML[planerCalMonth]+' '+planerCalYear;
+  const fd=new Date(planerCalYear,planerCalMonth,1).getDay();
+  const off=fd===0?6:fd-1;
+  const dim=new Date(planerCalYear,planerCalMonth+1,0).getDate();
+  const prevD=new Date(planerCalYear,planerCalMonth,0).getDate();
+  const todayStr=fmt(TODAY);
+  const selStr=fmt(planerDate);
+  // Dates that have entries
+  const entryDates=new Set(ST.entries.map(e=>e.date));
+
+  let h='<div class="planer-mini-grid">';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=>h+=`<div class="planer-mini-dow">${d}</div>`);
+  for(let i=0;i<off;i++){
+    const d=prevD-off+i+1;
+    const ds=fmt(new Date(planerCalYear,planerCalMonth-1,d));
+    h+=`<div class="planer-mini-day other${entryDates.has(ds)?' has-entry':''}" onclick="planerSelectDay('${ds}')">${d}</div>`;
+  }
+  for(let d=1;d<=dim;d++){
+    const ds=fmt(new Date(planerCalYear,planerCalMonth,d));
+    const isT=ds===todayStr, isSel=ds===selStr;
+    let cls='planer-mini-day';
+    if(isT)cls+=' today'; else if(isSel)cls+=' selected';
+    if(entryDates.has(ds))cls+=' has-entry';
+    h+=`<div class="${cls}" onclick="planerSelectDay('${ds}')">${d}</div>`;
+  }
+  const trail=(7-(off+dim)%7)%7;
+  for(let i=1;i<=trail;i++){
+    const ds=fmt(new Date(planerCalYear,planerCalMonth+1,i));
+    h+=`<div class="planer-mini-day other${entryDates.has(ds)?' has-entry':''}" onclick="planerSelectDay('${ds}')">${i}</div>`;
+  }
+  h+='</div>';
+  document.getElementById('planer-mini-cal').innerHTML=h;
+}
+
+function renderPlanerAll(){
+  const now=new Date(TODAY); now.setHours(0,0,0,0);
+  const sorted=[...ST.entries].sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  const upcoming=sorted.filter(e=>new Date(e.date)>=now);
+  const past=sorted.filter(e=>new Date(e.date)<now);
+  const container=document.getElementById('planer-all-list');
+  if(!ST.entries.length){
+    container.innerHTML='<div class="empty">Noch keine Einträge vorhanden.</div>';return;
+  }
+  let h='';
+  if(upcoming.length){
+    h+='<div style="font-size:.74rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 0 6px;">Bevorstehend &amp; heute</div>';
+    h+=upcoming.map(e=>entryRow(e)).join('');
+  }
+  if(past.length){
+    h+=`<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:.8rem;color:var(--text3);padding:6px 0;user-select:none;">Vergangene Einträge (${past.length})</summary>`;
+    h+=past.reverse().map(e=>entryRow(e)).join('');
+    h+='</details>';
+  }
+  container.innerHTML=h;
+}
+
+function entryRow(e){
+  const d=new Date(e.date);
+  const ds=d.getDate()+'. '+MS[d.getMonth()]+' '+d.getFullYear();
+  return `<div class="entry-card${e.done?' entry-done':''}">
+    <div class="entry-icon">${ENTRY_ICONS[e.type]||'📝'}</div>
+    <div class="entry-body">
+      <div class="entry-title">${e.title}</div>
+      ${e.note?`<div class="entry-note" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${e.note}</div>`:''}
+      <div class="entry-meta">${ds}${e.time?' · '+e.time+' Uhr':''} · ${ENTRY_LABELS[e.type]||e.type}</div>
+    </div>
+    <div class="entry-actions">
+      <button class="btn btn-sm" onclick="openModal('${e.date}',null,'entry')" title="Zum Tag bearbeiten">📅</button>
+      ${e.type==='aufgabe'?`<button class="btn btn-sm" onclick="toggleEntryDone(${e.id})">${e.done?'↩':'✓'}</button>`:''}
+      <button class="pdel" onclick="deleteEntry(${e.id})">✕</button>
+    </div>
+  </div>`;
+}
+</script>
+
+<!-- ── AUTH OVERLAY ── -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box">
+    <div style="font-family:var(--serif);font-size:1.15rem;margin-bottom:4px;">SM<span style="color:var(--accent)">·</span>Planer</div>
+    <h1 id="auth-title">Anmelden</h1>
+    <p id="auth-subtitle">Melde dich an um deine Daten auf allen Geräten zu synchronisieren.</p>
+    <div class="fl" style="margin-bottom:12px;">
+      <label class="lbl">E-Mail</label>
+      <input type="email" class="inp" id="auth-email" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <div class="fl" id="auth-pw-row" style="margin-bottom:12px;">
+      <label class="lbl">Passwort</label>
+      <input type="password" class="inp" id="auth-password" placeholder="Mindestens 6 Zeichen" onkeydown="if(event.key==='Enter')authSubmit()">
+    </div>
+    <button class="btn btn-p" style="width:100%;margin-top:4px;" onclick="authSubmit()" id="auth-submit-btn">Anmelden</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
+    <div class="auth-toggle" id="auth-toggle-row">
+      Noch kein Konto? <a onclick="switchAuthMode('register')">Registrieren</a>
+    </div>
+  </div>
+</div>
+
+<!-- sync indicator -->
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-dot"></div>
+  <span id="sync-msg">Synchronisiere…</span>
+</div>
+</body>
+</html>
