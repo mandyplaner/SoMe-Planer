@@ -1245,8 +1245,7 @@ function renderMonth(){
   h+=`<div class="legend">
     <div class="legend-item"><span class="leg-dot" style="background:var(--blue-l);border:1px solid var(--blue);"></span>Post</div>
     <div class="legend-item"><span class="leg-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>Thementag</div>
-    <div class="legend-item"><span class="leg-dot" style="background:var(--accent-l);border:1px solid var(--accent);"></span>Talkshow</div>
-  </div>`;
+      </div>`;
   h+='<div class="month-grid">';
   ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=>h+=`<div class="dow">${d}</div>`);
   for(let i=0;i<off;i++){const d=prevD-off+i+1;const ds=fmt(new Date(cY,cM-1,d));h+=`<div class="mday other" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div></div>`;}
@@ -1257,11 +1256,10 @@ function renderMonth(){
     const evs=THEMES.filter(e=>e.m===cM&&e.d===d);
     const tvs=ST.tv.filter(t=>t.date===ds);
     const dayEntries=ST.entries.filter(e=>e.date===ds);
-    let chips='',total=posts.length+evs.length+tvs.length+dayEntries.length,shown=0;
+    let chips='',total=posts.length+evs.length+dayEntries.length,shown=0;
     const MAX=3;
     for(const p of posts){if(shown>=MAX)break;chips+=`<div class="mchip mc-post">${platShort(p.platform)}: ${(p.text||'').substring(0,14)}</div>`;shown++;}
     for(const e of evs){if(shown>=MAX)break;chips+=`<div class="mchip mc-ev">${e.name.substring(0,18)}</div>`;shown++;}
-    for(const t of tvs){if(shown>=MAX)break;chips+=`<div class="mchip mc-tv">${t.show}</div>`;shown++;}
     for(const en of dayEntries){if(shown>=MAX)break;chips+=`<div class="mchip mc-entry">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,14)}</div>`;shown++;}
     const more=total-shown>0?`<div class="mday-more">+${total-shown} weitere</div>`:'';
     h+=`<div class="mday${isT?' today':''}" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div><div class="mday-chips">${chips}${more}</div></div>`;
@@ -1345,15 +1343,14 @@ function renderWeek(){
       const wkEntries=ST.entries.filter(e=>{
         if(e.date!==ds)return false;
         if(e.type==='termin'){const eh=parseInt((e.time||'00').split(':')[0]);return eh===hr;}
-        return hr===8; // notiz/aufgabe/idee show at 8am slot
+        return hr===8;
       });
       let inner='';
-      let evCount=ps.length+evs.length+tvs.length+wkEntries.length;
+      let evCount=ps.length+evs.length+wkEntries.length;
       if(pct>=20&&!evCount){inner+=`<div class="wg-pct">${pct}%</div>`;}
       ps.forEach((p,i)=>{inner+=`<div class="wg-ev wg-ev-post" style="top:${2+i*15}px;" onclick="editPost(${p.id},event)">${platShort(p.platform)}: ${(p.text||'').substring(0,13)}</div>`;});
       evs.forEach((e,i)=>{inner+=`<div class="wg-ev wg-ev-ev" style="top:${2+i*15}px;">${e.name.substring(0,14)}</div>`;});
-      tvs.forEach((t,i)=>{inner+=`<div class="wg-ev wg-ev-tv" style="top:${2+i*15}px;">${t.show}</div>`;});
-      wkEntries.forEach((en,i)=>{inner+=`<div class="wg-ev" style="top:${2+(ps.length+evs.length+tvs.length+i)*15}px;background:var(--purple-l);color:var(--purple);border-left:2px solid var(--purple);">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,12)}</div>`;});
+      wkEntries.forEach((en,i)=>{inner+=`<div class="wg-ev" style="top:${2+(ps.length+evs.length+i)*15}px;background:var(--purple-l);color:var(--purple);border-left:2px solid var(--purple);">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,12)}</div>`;});
 
       const safeT=tip?tip.replace(/'/g,"\\'").replace(/\n/g,'\\n'):'';
       const tipAttr=safeT?`onmouseenter="showTip(event,'${safeT}')" onmouseleave="hideTip()"`:'';
@@ -2098,7 +2095,7 @@ function saveEntry(){
 }
 
 function toggleEntryDone(id){
-  const e=ST.entries.find(x=>x.id===id);
+  const e=ST.entries.find(x=>String(x.id)===String(id));
   if(e){
     e.done=!e.done;saveST();
     cloudSaveEntry(e);
@@ -2107,8 +2104,10 @@ function toggleEntryDone(id){
 }
 
 function deleteEntry(id){
-  ST.entries=ST.entries.filter(x=>x.id!==id);
-  saveST();renderPlanerDay();renderPlanerMiniCal();renderPlanerAll();updateBadges();
+  if(!confirm('Eintrag wirklich löschen?'))return;
+  cloudDeleteEntry(id);
+  ST.entries=ST.entries.filter(x=>String(x.id)!==String(id));
+  saveST();renderCal();renderPlanerAll();updateBadges();
 }
 
 function renderPlanerDay(){
@@ -2126,8 +2125,9 @@ function renderPlanerDay(){
     list.innerHTML='<div class="empty" style="padding:1.2rem 0;">Keine Einträge für diesen Tag.</div>';
     return;
   }
-  list.innerHTML=entries.map(e=>`
-    <div class="entry-card${e.done?' entry-done':''}">
+  list.innerHTML=entries.map(e=>{
+    const eid=typeof e.id==='string'?`'${e.id}'`:e.id;
+    return `<div class="entry-card${e.done?' entry-done':''}">
       <div class="entry-icon">${ENTRY_ICONS[e.type]||'📝'}</div>
       <div class="entry-body">
         <div class="entry-title">${e.title}</div>
@@ -2135,10 +2135,11 @@ function renderPlanerDay(){
         <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}</div>
       </div>
       <div class="entry-actions">
-        ${e.type==='aufgabe'?`<button class="btn btn-sm" onclick="toggleEntryDone(${e.id})" title="${e.done?'Als offen markieren':'Als erledigt markieren'}">${e.done?'↩':'✓'}</button>`:''}
-        <button class="pdel" onclick="deleteEntry(${e.id})" title="Löschen">✕</button>
+        ${e.type==='aufgabe'?`<button class="btn btn-sm" style="color:${e.done?'var(--accent)':'var(--text3)'};border-color:${e.done?'var(--accent)':'var(--border2)'};" onclick="toggleEntryDone(${eid})">${e.done?'↩ Offen':'✓ Erledigt'}</button>`:''}
+        <button class="pdel" onclick="deleteEntry(${eid})" title="Löschen" style="font-size:1.1rem;">🗑</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderPlanerMiniCal(){
@@ -2201,6 +2202,7 @@ function renderPlanerAll(){
 function entryRow(e){
   const d=new Date(e.date);
   const ds=d.getDate()+'. '+MS[d.getMonth()]+' '+d.getFullYear();
+  const eid=typeof e.id==='string'?`'${e.id}'`:e.id;
   return `<div class="entry-card${e.done?' entry-done':''}">
     <div class="entry-icon">${ENTRY_ICONS[e.type]||'📝'}</div>
     <div class="entry-body">
@@ -2209,9 +2211,9 @@ function entryRow(e){
       <div class="entry-meta">${ds}${e.time?' · '+e.time+' Uhr':''} · ${ENTRY_LABELS[e.type]||e.type}</div>
     </div>
     <div class="entry-actions">
-      <button class="btn btn-sm" onclick="openModal('${e.date}',null,'entry')" title="Zum Tag bearbeiten">📅</button>
-      ${e.type==='aufgabe'?`<button class="btn btn-sm" onclick="toggleEntryDone(${e.id})">${e.done?'↩':'✓'}</button>`:''}
-      <button class="pdel" onclick="deleteEntry(${e.id})">✕</button>
+      <button class="btn btn-sm" onclick="openModal('${e.date}',null,'entry')" title="Tag öffnen">📅</button>
+      ${e.type==='aufgabe'?`<button class="btn btn-sm" style="color:${e.done?'var(--accent)':'var(--text3)'};" onclick="toggleEntryDone(${eid})">${e.done?'↩':'✓'}</button>`:''}
+      <button class="pdel" onclick="deleteEntry(${eid})" style="font-size:1.1rem;">🗑</button>
     </div>
   </div>`;
 }
