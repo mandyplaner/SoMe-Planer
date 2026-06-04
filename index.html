@@ -728,7 +728,7 @@ function switchAuthMode(mode) {
   document.getElementById('auth-success').style.display = 'none';
 }
 
-async function authSubmit() {
+async function authAuto() {
   const email    = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const errEl    = document.getElementById('auth-error');
@@ -737,28 +737,38 @@ async function authSubmit() {
   okEl.style.display  = 'none';
 
   if (!email || !password) { showAuthError('Bitte E-Mail und Passwort eingeben.'); return; }
+  if (password.length < 6) { showAuthError('Passwort muss mindestens 6 Zeichen haben.'); return; }
 
   const btn = document.getElementById('auth-submit-btn');
   btn.disabled = true; btn.textContent = '…';
 
   try {
-    let result;
-    if (authMode === 'register') {
-      result = await supa.auth.signUp({ email, password });
-      if (result.error) throw result.error;
-      okEl.textContent = 'Bestätigungs-E-Mail gesendet! Bitte E-Mail prüfen.';
+    // Try login first
+    const loginResult = await supa.auth.signInWithPassword({ email, password });
+    if (!loginResult.error) return; // success → onAuthStateChange handles the rest
+
+    // If "Invalid login credentials" → try to register
+    if (loginResult.error.message.includes('Invalid login') || loginResult.error.message.includes('invalid_credentials')) {
+      const regResult = await supa.auth.signUp({ email, password });
+      if (regResult.error) throw regResult.error;
+      // If email confirmation is off, user is logged in immediately
+      if (regResult.data?.session) return; // onAuthStateChange fires
+      // If email confirmation is on, show message
+      okEl.textContent = 'Fast geschafft! Bitte prüfe deine E-Mail und klicke auf den Bestätigungslink.';
       okEl.style.display = 'block';
     } else {
-      result = await supa.auth.signInWithPassword({ email, password });
-      if (result.error) throw result.error;
+      throw loginResult.error;
     }
   } catch (err) {
     showAuthError(translateAuthError(err.message));
   } finally {
     btn.disabled = false;
-    btn.textContent = authMode === 'register' ? 'Konto erstellen' : 'Anmelden';
+    btn.textContent = 'Anmelden / Registrieren';
   }
 }
+
+// Keep switchAuthMode as no-op for compatibility
+function switchAuthMode(mode) {}
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
@@ -766,11 +776,13 @@ function showAuthError(msg) {
 }
 
 function translateAuthError(msg) {
-  if (msg.includes('Invalid login'))         return 'E-Mail oder Passwort falsch.';
-  if (msg.includes('already registered'))    return 'Diese E-Mail ist bereits registriert. Bitte anmelden.';
+  if (msg.includes('Invalid login') || msg.includes('invalid_credentials'))
+    return 'Passwort falsch. Versuche es nochmal oder nutze eine andere E-Mail für ein neues Konto.';
+  if (msg.includes('already registered'))    return 'E-Mail bereits registriert — bitte anmelden.';
   if (msg.includes('Password should be'))    return 'Passwort muss mindestens 6 Zeichen haben.';
-  if (msg.includes('Unable to validate'))    return 'Ungültige E-Mail-Adresse.';
-  return msg;
+  if (msg.includes('Unable to validate'))    return 'Bitte eine gültige E-Mail-Adresse eingeben.';
+  if (msg.includes('Email not confirmed'))   return 'Bitte erst die Bestätigungs-E-Mail bestätigen.';
+  return 'Fehler: ' + msg;
 }
 
 async function signOut() {
@@ -2042,22 +2054,20 @@ function entryRow(e){
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
     <div style="font-family:var(--serif);font-size:1.15rem;margin-bottom:4px;">SM<span style="color:var(--accent)">·</span>Planer</div>
-    <h1 id="auth-title">Anmelden</h1>
-    <p id="auth-subtitle">Melde dich an um deine Daten auf allen Geräten zu synchronisieren.</p>
+    <h1 style="font-family:var(--serif);font-size:1.6rem;font-weight:400;margin-bottom:6px;">Willkommen</h1>
+    <p style="font-size:.88rem;color:var(--text2);margin-bottom:24px;line-height:1.6;">Gib deine E-Mail und ein Passwort ein. Beim ersten Mal wird automatisch ein Konto erstellt.</p>
     <div class="fl" style="margin-bottom:12px;">
       <label class="lbl">E-Mail</label>
-      <input type="email" class="inp" id="auth-email" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')authSubmit()">
+      <input type="email" class="inp" id="auth-email" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')authAuto()">
     </div>
-    <div class="fl" id="auth-pw-row" style="margin-bottom:12px;">
+    <div class="fl" style="margin-bottom:16px;">
       <label class="lbl">Passwort</label>
-      <input type="password" class="inp" id="auth-password" placeholder="Mindestens 6 Zeichen" onkeydown="if(event.key==='Enter')authSubmit()">
+      <input type="password" class="inp" id="auth-password" placeholder="Mindestens 6 Zeichen" onkeydown="if(event.key==='Enter')authAuto()">
     </div>
-    <button class="btn btn-p" style="width:100%;margin-top:4px;" onclick="authSubmit()" id="auth-submit-btn">Anmelden</button>
+    <button class="btn btn-p" style="width:100%;" onclick="authAuto()" id="auth-submit-btn">Anmelden / Registrieren</button>
     <div class="auth-error" id="auth-error"></div>
     <div class="auth-success" id="auth-success"></div>
-    <div class="auth-toggle" id="auth-toggle-row">
-      Noch kein Konto? <a onclick="switchAuthMode('register')">Registrieren</a>
-    </div>
+    <p style="font-size:.78rem;color:var(--text3);text-align:center;margin-top:14px;line-height:1.6;">Kein Konto? Einfach E-Mail + Passwort eingeben —<br>das Konto wird automatisch erstellt.</p>
   </div>
 </div>
 
