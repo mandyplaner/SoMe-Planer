@@ -317,6 +317,186 @@ select.inp{cursor:pointer;}
 .user-chip{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:8px;}
 .user-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.78rem;padding:0;}
 .user-chip button:hover{color:var(--red);}
+
+/* ══════════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 700px)
+   ══════════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  /* ── Shell: single column, bottom nav ── */
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 54px 1fr 64px;
+  }
+
+  /* ── Topbar ── */
+  .topbar { padding: 0 14px; gap: 10px; }
+  .logo { font-size: 1rem; }
+  .logo-sub { display: none; }
+  .chip { font-size: .72rem; padding: 3px 8px; }
+  .user-chip { font-size: .72rem; padding: 3px 8px; }
+  .user-chip button { font-size: .72rem; }
+
+  /* ── Sidebar → bottom nav bar ── */
+  .sidebar {
+    grid-row: 3;
+    grid-column: 1;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    background: var(--card);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    z-index: 40;
+    gap: 0;
+    justify-content: space-around;
+    align-items: stretch;
+  }
+  .nav-sep { display: none; }
+  .nb {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 4px 6px;
+    font-size: .65rem;
+    border-radius: 0;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: auto;
+  }
+  .nb svg { width: 20px; height: 20px; }
+  .nb.on { background: none; color: var(--accent); }
+  .nb.on svg { stroke: var(--accent); }
+  .nbadge {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 18px);
+    font-size: .6rem;
+    padding: 1px 5px;
+    margin: 0;
+  }
+  .nb { position: relative; }
+
+  /* ── Main: account for bottom nav ── */
+  .main {
+    grid-row: 2;
+    padding: 16px 14px 80px;
+    overflow-y: auto;
+  }
+
+  /* ── Page headings ── */
+  .ph h1 { font-size: 1.4rem; }
+  .ph p  { font-size: .82rem; }
+  .ph    { margin-bottom: 16px; }
+
+  /* ── Cards ── */
+  .cp { padding: 14px; }
+
+  /* ── Calendar toolbar ── */
+  .cal-toolbar { gap: 6px; }
+  .cal-toolbar h2 { font-size: 1rem; min-width: 0; }
+  .view-toggle .vt-btn { padding: 5px 10px; font-size: .78rem; }
+  .btn { padding: 7px 12px; font-size: .82rem; }
+  .btn-sm { padding: 4px 9px; font-size: .75rem; }
+
+  /* ── Month grid ── */
+  .mday { min-height: 52px; padding: 3px 2px; }
+  .mday-n { font-size: .78rem; }
+  .mchip { font-size: .58rem; padding: 1px 3px; }
+  .dow { font-size: .62rem; padding: 4px 0; }
+
+  /* ── Week grid ── */
+  .week-grid {
+    grid-template-columns: 38px repeat(7,1fr);
+    min-width: 0;
+  }
+  .wg-tl { font-size: .58rem; padding: 2px 3px 0 0; height: 44px; }
+  .wg-cell { height: 44px; }
+  .wg-head-d { font-size: .85rem; }
+  .wg-head-dow { font-size: .6rem; }
+  .wg-ev { font-size: .55rem; padding: 1px 3px; }
+  .wg-pct { font-size: .55rem; }
+
+  /* ── Forms ── */
+  .g2 { grid-template-columns: 1fr; gap: 10px; }
+  .g3 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .g3 > :first-child { grid-column: 1 / -1; }
+  .inp { padding: 10px 12px; font-size: .95rem; }
+  .lbl { font-size: .72rem; }
+  .plat-groups { gap: 8px; }
+  .plat-group { padding: 10px 12px; }
+  .pt { padding: 7px 12px; font-size: .82rem; }
+
+  /* ── Modal: full screen on mobile ── */
+  .modal-bg { align-items: flex-end; }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 20px 16px 32px;
+    max-height: 92vh;
+  }
+  .modal h2 { font-size: 1.1rem; }
+  .modal-tabs { gap: 6px; }
+  .modal-tab { padding: 8px 14px; font-size: .85rem; flex: 1; text-align: center; }
+
+  /* ── Auth overlay ── */
+  .auth-overlay { align-items: flex-end; padding: 0; }
+  .auth-box {
+    width: 100%;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 28px 20px 40px;
+  }
+
+  /* ── TV table: horizontal scroll ── */
+  .tv-table-wrap { margin-bottom: 14px; }
+  .tv-table { font-size: .78rem; }
+  .tv-table th.show-head { font-size: .78rem; }
+  .tv-table td { padding: 8px 10px; }
+  .tv-cell-topic { font-size: .78rem; }
+  .tv-cell-guests { font-size: .72rem; }
+
+  /* ── Post rows ── */
+  .post-row { padding: 9px 11px; gap: 8px; }
+  .ptext { font-size: .78rem; }
+  .pwhen { font-size: .7rem; }
+  .pplat { font-size: .68rem; padding: 2px 7px; }
+
+  /* ── Entries ── */
+  .entry-card { padding: 10px 12px; gap: 10px; }
+  .entry-title { font-size: .88rem; }
+  .entry-note { font-size: .78rem; }
+
+  /* ── Tags ── */
+  .tag { font-size: .66rem; padding: 2px 7px; }
+
+  /* ── TV workflow steps ── */
+  #tv-workflow-steps { flex-direction: column !important; }
+  #tv-workflow-steps > * { min-width: 0 !important; }
+  #tv-arrow { display: none !important; }
+
+  /* ── Heatmap legend ── */
+  .heat-legend { gap: 6px; }
+  .heat-legend-label { font-size: .72rem; }
+  .heat-note { display: none; }
+  .heat-sw { width: 14px; height: 10px; }
+
+  /* ── Settings ── */
+  .srow { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* ── Planer layout ── */
+  .planer-layout { flex-direction: column !important; }
+}
+
+/* ── Slightly larger screens (tablet) ── */
+@media (min-width: 701px) and (max-width: 900px) {
+  .shell { grid-template-columns: 180px 1fr; }
+  .nb { font-size: .8rem; padding: 8px 10px; }
+  .main { padding: 20px 20px; }
+}
 </style>
 
 <body>
@@ -417,7 +597,7 @@ select.inp{cursor:pointer;}
   <!-- Action bar: 2-step workflow -->
   <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:18px;">
     <div style="font-size:.78rem;font-weight:500;color:var(--text);margin-bottom:12px;">Sendungen abrufen — 3 Klicks</div>
-    <div style="display:flex;gap:0;align-items:stretch;flex-wrap:wrap;gap:10px;">
+    <div id="tv-workflow-steps" style="display:flex;gap:0;align-items:stretch;flex-wrap:wrap;gap:10px;">
 
       <!-- Step 1 -->
       <div style="flex:1;min-width:200px;background:var(--bg2);border-radius:var(--r);padding:12px 14px;">
@@ -430,7 +610,7 @@ select.inp{cursor:pointer;}
       </div>
 
       <!-- Arrow -->
-      <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding:0 4px;">→</div>
+      <div id="tv-arrow" style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding:0 4px;">→</div>
 
       <!-- Step 2 -->
       <div style="flex:1;min-width:200px;background:var(--bg2);border-radius:var(--r);padding:12px 14px;">
