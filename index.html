@@ -975,7 +975,7 @@ let dpPrefilledTime = '';
 function openDayPanel(dateStr, timeStr) {
   dpCurrentDate = dateStr;
   dpPrefilledTime = timeStr || '';
-  const d = new Date(dateStr);
+  const d = parseDate(dateStr);
   document.getElementById('dp-title').textContent =
     DL[d.getDay()] + ', ' + d.getDate() + '. ' + ML[d.getMonth()] + ' ' + d.getFullYear();
   renderDayPanel();
@@ -1003,7 +1003,7 @@ function renderDayPanel() {
   const posts   = ST.posts.filter(p => p.date === ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const entries = ST.entries.filter(e => e.date === ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const evs     = THEMES.filter(e => {
-    const d = new Date(ds);
+    const d = parseDate(ds);
     return e.m === d.getMonth() && e.d === d.getDate();
   });
   let h = '';
@@ -1413,6 +1413,13 @@ let weekHeatPlat='X/Twitter'; // which platform's heat to show in week view
 
 function fmt(d){return d.toISOString().split('T')[0]}
 
+// Parse YYYY-MM-DD as LOCAL date (avoids UTC timezone offset bug)
+function parseDate(s){
+  if(!s)return new Date();
+  const [y,m,d]=s.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('today-chip').textContent=
@@ -1651,14 +1658,14 @@ function postListHTML(weekOnly,startDay,endDay){
   const hidePast=ST.settings.hidePastPosts;
   const nowFull=new Date();
   let posts=[...ST.posts].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  if(hidePast)posts=posts.filter(p=>new Date(p.date+' '+(p.time||'23:59'))>=nowFull);
+  if(hidePast)posts=posts.filter(p=>parseDate(p.date)>=nowFull);
   if(weekOnly&&startDay&&endDay){
     const s=fmt(startDay),e=fmt(endDay);
     posts=posts.filter(p=>p.date>=s&&p.date<=e);
   }
   const title=weekOnly?'Posts diese Woche':'Alle geplanten Posts';
   let rows=posts.length?posts.map(p=>{
-    const d=new Date(p.date);
+    const d=parseDate(p.date);
     const ds=(weekOnly?DL[d.getDay()]+' ':'')+d.getDate()+'.'+(d.getMonth()+1)+'. '+p.time;
     const prev=(p.anlass?'['+p.anlass+'] ':'')+p.text;
     const catChip=p.category?`<span class="post-cat pc-${p.category}">${p.category.charAt(0).toUpperCase()+p.category.slice(1)}</span>`:'';
@@ -2098,13 +2105,13 @@ function renderEvList(){
 function updateBadges(){
   const now=new Date();now.setHours(0,0,0,0);
   const week=new Date(now);week.setDate(week.getDate()+7);
-  const tv7=ST.tv.filter(t=>{const d=new Date(t.date);return d>=now&&d<=week;}).length;
+  const tv7=ST.tv.filter(t=>{const d=parseDate(t.date);return d>=now&&d<=week;}).length;
   const ev7=THEMES.filter(e=>{const d=new Date(new Date().getFullYear(),e.m,e.d);return d>=now&&d<=week;}).length;
   const s=(id,n)=>{const el=document.getElementById(id);el.textContent=n;el.className='nbadge'+(n>0?' hot':'');};
   s('nb-posts',ST.posts.length);s('nb-ev',ev7);s('nb-tv',tv7);
   // Planer: count upcoming entries (today + future)
   const now2=new Date();now2.setHours(0,0,0,0);
-  const planerUpcoming=(ST.entries||[]).filter(e=>new Date(e.date)>=now2&&!e.done).length;
+  const planerUpcoming=(ST.entries||[]).filter(e=>parseDate(e.date)>=now2&&!e.done).length;
   const nbP=document.getElementById('nb-planer');
   if(nbP){nbP.textContent=planerUpcoming;nbP.className='nbadge'+(planerUpcoming>0?' hot':'');}
 }
@@ -2449,7 +2456,7 @@ function renderPlanerDay(){
       <div class="entry-body">
         <div class="entry-title">${e.title}</div>
         ${e.note?`<div class="entry-note">${e.note}</div>`:''}
-        <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}${e.repeat?' 🔁':''}</div>
+        <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}${e.repeat?(repeatCount>1?' 🔁 '+repeatCount+'×':' 🔁'):''}</div>
       </div>
       <div class="entry-actions">
         ${e.type==='aufgabe'?`<button class="btn btn-sm" style="color:${e.done?'var(--accent)':'var(--text3)'};border-color:${e.done?'var(--accent)':'var(--border2)'};" onclick="toggleEntryDone(${eid})">${e.done?'↩ Offen':'✓ Erledigt'}</button>`:''}
@@ -2497,27 +2504,43 @@ function renderPlanerMiniCal(){
 function renderPlanerAll(){
   const now=new Date(TODAY); now.setHours(0,0,0,0);
   const sorted=[...ST.entries].sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
-  const upcoming=sorted.filter(e=>new Date(e.date)>=now);
-  const past=sorted.filter(e=>new Date(e.date)<now);
+  const upcoming=sorted.filter(e=>parseDate(e.date)>=now);
+  const past=sorted.filter(e=>parseDate(e.date)<now);
   const container=document.getElementById('planer-all-list');
   if(!ST.entries.length){
     container.innerHTML='<div class="empty">Noch keine Einträge vorhanden.</div>';return;
   }
+  // Group recurring: show only first upcoming occurrence per series
+  function groupEntries(list){
+    const seen=new Set();
+    const result=[];
+    list.forEach(e=>{
+      if(!e.repeat){result.push({entry:e,count:0});return;}
+      const key=e.title+'|'+e.type+'|'+e.repeat;
+      if(seen.has(key))return;
+      seen.add(key);
+      const total=ST.entries.filter(x=>x.title===e.title&&x.type===e.type&&x.repeat===e.repeat).length;
+      result.push({entry:e,count:total});
+    });
+    return result;
+  }
   let h='';
   if(upcoming.length){
+    const grouped=groupEntries(upcoming);
     h+='<div style="font-size:.74rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 0 6px;">Bevorstehend &amp; heute</div>';
-    h+=upcoming.map(e=>entryRow(e)).join('');
+    h+=grouped.map(({entry:e,count})=>entryRow(e,count)).join('');
   }
   if(past.length){
-    h+=`<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:.8rem;color:var(--text3);padding:6px 0;user-select:none;">Vergangene Einträge (${past.length})</summary>`;
-    h+=past.reverse().map(e=>entryRow(e)).join('');
+    const pastGrouped=groupEntries([...past].reverse());
+    h+=`<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:.8rem;color:var(--text3);padding:6px 0;user-select:none;">Vergangene Einträge (${pastGrouped.length})</summary>`;
+    h+=pastGrouped.map(({entry:e,count})=>entryRow(e,count)).join('');
     h+='</details>';
   }
   container.innerHTML=h;
 }
 
-function entryRow(e){
-  const d=new Date(e.date);
+function entryRow(e,repeatCount){
+  const d=parseDate(e.date);
   const ds=d.getDate()+'. '+MS[d.getMonth()]+' '+d.getFullYear();
   const eid=typeof e.id==='string'?`'${e.id}'`:e.id;
   return `<div class="entry-card${e.done?' entry-done':''}">
