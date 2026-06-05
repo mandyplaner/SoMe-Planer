@@ -277,6 +277,40 @@ select.inp{cursor:pointer;}
 .modal-tab.on{background:var(--accent-l);color:var(--accent);border-color:var(--accent);font-weight:500;}
 
 
+
+/* ── DAY DETAIL PANEL ── */
+.day-panel-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;align-items:flex-end;justify-content:center;}
+.day-panel-bg.open{display:flex;}
+@media(min-width:701px){
+  .day-panel-bg{align-items:center;}
+  .day-panel{width:480px;max-height:80vh;border-radius:var(--r-lg)!important;}
+}
+.day-panel{background:var(--card);width:100%;max-width:100vw;border-radius:var(--r-lg) var(--r-lg) 0 0;
+  padding:20px 18px 32px;max-height:85vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(0,0,0,.3);}
+.day-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.day-panel-title{font-family:var(--serif);font-size:1.15rem;font-weight:400;}
+.day-panel-close{background:none;border:none;color:var(--text3);font-size:1.3rem;cursor:pointer;padding:2px 6px;border-radius:var(--r);}
+.day-panel-close:hover{color:var(--text);background:var(--bg2);}
+.day-panel-section{font-size:.7rem;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;}
+.day-panel-add{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+/* entry/post cards inside panel */
+.dp-card{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;}
+.dp-card.done-card{opacity:.55;}
+.dp-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.dp-body{flex:1;min-width:0;}
+.dp-title{font-size:.88rem;font-weight:500;color:var(--text);}
+.dp-title.done-text{text-decoration:line-through;}
+.dp-meta{font-size:.75rem;color:var(--text3);margin-top:2px;}
+.dp-note{font-size:.78rem;color:var(--text2);margin-top:3px;line-height:1.5;}
+.dp-actions{display:flex;gap:4px;flex-shrink:0;align-items:flex-start;margin-top:1px;}
+.dp-btn{background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 7px;
+  font-size:.75rem;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.dp-btn:hover{background:var(--bg2);}
+.dp-btn.done-btn{color:var(--accent);border-color:var(--accent);}
+.dp-btn.del-btn{color:var(--red);}
+.dp-btn.del-btn:hover{background:var(--red-l);border-color:var(--red);}
+.dp-empty{font-size:.82rem;color:var(--text3);text-align:center;padding:12px 0;}
 /* ── POST CATEGORIES ── */
 .cat-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .cat-btn { padding: 5px 12px; border-radius: 20px; border: 2px solid transparent; background: none;
@@ -934,6 +968,165 @@ select.inp{cursor:pointer;}
 
 <script>
 
+// ── DAY PANEL ──────────────────────────────────────────────────────────────
+let dpCurrentDate = '';
+let dpPrefilledTime = '';
+
+function openDayPanel(dateStr, timeStr) {
+  dpCurrentDate = dateStr;
+  dpPrefilledTime = timeStr || '';
+  const d = new Date(dateStr);
+  document.getElementById('dp-title').textContent =
+    DL[d.getDay()] + ', ' + d.getDate() + '. ' + ML[d.getMonth()] + ' ' + d.getFullYear();
+  renderDayPanel();
+  document.getElementById('day-panel-bg').classList.add('open');
+}
+
+function closeDayPanel() {
+  document.getElementById('day-panel-bg').classList.remove('open');
+}
+function closeDayPanelBg(e) {
+  if (e.target === document.getElementById('day-panel-bg')) closeDayPanel();
+}
+
+function dpAddPost() {
+  closeDayPanel();
+  openModal(dpCurrentDate, dpPrefilledTime, 'post');
+}
+function dpAddEntry() {
+  closeDayPanel();
+  openModal(dpCurrentDate, null, 'entry');
+}
+
+function renderDayPanel() {
+  const ds = dpCurrentDate;
+  const posts   = ST.posts.filter(p => p.date === ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const entries = ST.entries.filter(e => e.date === ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const evs     = THEMES.filter(e => {
+    const d = new Date(ds);
+    return e.m === d.getMonth() && e.d === d.getDate();
+  });
+  let h = '';
+
+  if (evs.length) {
+    h += '<div class="day-panel-section">Thementage</div>';
+    evs.forEach(e => {
+      h += `<div class="dp-card">
+        <div class="dp-icon">🗓</div>
+        <div class="dp-body">
+          <div class="dp-title">${e.name}</div>
+          <div class="dp-meta">${e.tags.map(t=>'<span class="tag t-'+t+'">'+t+'</span>').join(' ')}</div>
+          <div class="dp-note">${e.desc}</div>
+        </div>
+        <div class="dp-actions">
+          <button class="dp-btn" onclick="closeDayPanel();openModalPrefilled('${e.name.replace(/'/g,"\'")}','${ds}')">Post planen</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (posts.length) {
+    h += '<div class="day-panel-section">Geplante Posts</div>';
+    posts.forEach(p => {
+      const pid = typeof p.id==='string' ? "'"+p.id+"'" : p.id;
+      const catChip = p.category ? '<span class="post-cat pc-'+p.category+'" style="font-size:.65rem;">'+p.category+'</span> ' : '';
+      h += '<div class="dp-card">' +
+        '<div class="dp-icon">📸</div>' +
+        '<div class="dp-body">' +
+          '<div class="dp-title">'+catChip+platShort(p.platform)+(p.time?' · '+p.time+' Uhr':'')+'</div>' +
+          '<div class="dp-note" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+p.text+'</div>' +
+        '</div>' +
+        '<div class="dp-actions">' +
+          '<button class="dp-btn" onclick="closeDayPanel();editPost('+pid+',event)">✎</button>' +
+          '<button class="dp-btn del-btn" onclick="dpDeletePost('+pid+')">🗑</button>' +
+        '</div></div>';
+    });
+  }
+
+  if (entries.length) {
+    h += '<div class="day-panel-section">Einträge</div>';
+    entries.forEach(e => {
+      const eid = typeof e.id==='string' ? "'"+e.id+"'" : e.id;
+      const repeatGroup = e.repeat ? ST.entries.filter(x => x.title===e.title && x.type===e.type && x.repeat===e.repeat) : [];
+      const hasGroup = repeatGroup.length > 1;
+      h += '<div class="dp-card'+(e.done?' done-card':'')+'">' +
+        '<div class="dp-icon">'+(ENTRY_ICONS[e.type]||'📝')+'</div>' +
+        '<div class="dp-body">' +
+          '<div class="dp-title'+(e.done?' done-text':'')+'">'+e.title+(e.repeat?' 🔁':'')+'</div>' +
+          (e.note?'<div class="dp-note">'+e.note+'</div>':'') +
+          '<div class="dp-meta">'+(ENTRY_LABELS[e.type]||e.type)+(e.time?' · '+e.time+' Uhr':'')+'</div>' +
+        '</div>' +
+        '<div class="dp-actions">' +
+          (e.type==='aufgabe'?'<button class="dp-btn done-btn" onclick="dpToggleDone('+eid+')">'+(e.done?'↩':'✓')+'</button>':'') +
+          '<button class="dp-btn" onclick="dpEditEntry('+eid+')">✎</button>' +
+          '<button class="dp-btn del-btn" onclick="dpDeleteEntry('+eid+','+hasGroup+')">🗑</button>' +
+        '</div></div>';
+    });
+  }
+
+  if (!posts.length && !entries.length && !evs.length) {
+    h = '<div class="dp-empty">Keine Einträge für diesen Tag.</div>';
+  }
+  document.getElementById('dp-content').innerHTML = h;
+}
+
+function dpDeletePost(id) {
+  if (!confirm('Post löschen?')) return;
+  cloudDeletePost(id);
+  ST.posts = ST.posts.filter(p => String(p.id) !== String(id));
+  saveST(); renderCal(); updateBadges();
+  renderDayPanel();
+}
+
+function dpToggleDone(id) {
+  const e = ST.entries.find(x => String(x.id) === String(id));
+  if (e) {
+    e.done = !e.done; saveST();
+    cloudSaveEntry(e);
+    renderCal(); renderPlanerAll();
+    renderDayPanel();
+  }
+}
+
+function dpEditEntry(id) {
+  const e = ST.entries.find(x => String(x.id) === String(id));
+  if (!e) return;
+  closeDayPanel();
+  openModal(e.date, null, 'entry');
+  setTimeout(() => {
+    document.getElementById('entry-title').value = e.title;
+    document.getElementById('entry-note').value  = e.note || '';
+    document.getElementById('entry-time').value  = e.time || '';
+    selectedEntryType = e.type;
+    document.querySelectorAll('.etype-btn').forEach(b => b.classList.toggle('on', b.dataset.t === e.type));
+    window._editEntryId = String(id);
+  }, 50);
+}
+
+function dpDeleteEntry(id, hasGroup) {
+  if (hasGroup) {
+    const choice = confirm('Nur diesen Termin löschen?\n\nOK = nur diesen Termin\nAbbrechen = alle wiederkehrenden Termine dieser Serie');
+    if (choice) {
+      cloudDeleteEntry(id);
+      ST.entries = ST.entries.filter(x => String(x.id) !== String(id));
+    } else {
+      const e = ST.entries.find(x => String(x.id) === String(id));
+      if (e) {
+        const group = ST.entries.filter(x => x.title===e.title && x.type===e.type && x.repeat===e.repeat);
+        group.forEach(x => cloudDeleteEntry(x.id));
+        ST.entries = ST.entries.filter(x => !(x.title===e.title && x.type===e.type && x.repeat===e.repeat));
+      }
+    }
+  } else {
+    if (!confirm('Eintrag löschen?')) return;
+    cloudDeleteEntry(id);
+    ST.entries = ST.entries.filter(x => String(x.id) !== String(id));
+  }
+  saveST(); renderCal(); renderPlanerAll(); updateBadges();
+  renderDayPanel();
+}
+
+
 // ══════════════════════════════════════════════════════════════════════════════
 // SUPABASE SETUP
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1301,7 +1494,7 @@ function renderMonth(){
       </div>`;
   h+='<div class="month-grid">';
   ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=>h+=`<div class="dow">${d}</div>`);
-  for(let i=0;i<off;i++){const d=prevD-off+i+1;const ds=fmt(new Date(cY,cM-1,d));h+=`<div class="mday other" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div></div>`;}
+  for(let i=0;i<off;i++){const d=prevD-off+i+1;const ds=fmt(new Date(cY,cM-1,d));h+=`<div class="mday other" onclick="openDayPanel('${ds}')"><div class="mday-n">${d}</div></div>`;}
   for(let d=1;d<=dim;d++){
     const ds=fmt(new Date(cY,cM,d));
     const isT=d===TODAY.getDate()&&cM===TODAY.getMonth()&&cY===TODAY.getFullYear();
@@ -1315,10 +1508,10 @@ function renderMonth(){
     for(const e of evs){if(shown>=MAX)break;chips+=`<div class="mchip mc-ev">${e.name.substring(0,18)}</div>`;shown++;}
     for(const en of dayEntries){if(shown>=MAX)break;chips+=`<div class="mchip mc-entry">${ENTRY_ICONS[en.type]||'📝'} ${en.title.substring(0,14)}</div>`;shown++;}
     const more=total-shown>0?`<div class="mday-more">+${total-shown} weitere</div>`:'';
-    h+=`<div class="mday${isT?' today':''}" onclick="openModal('${ds}',null)"><div class="mday-n">${d}</div><div class="mday-chips">${chips}${more}</div></div>`;
+    h+=`<div class="mday${isT?' today':''}" onclick="openDayPanel('${ds}')"><div class="mday-n">${d}</div><div class="mday-chips">${chips}${more}</div></div>`;
   }
   const trail=(7-(off+dim)%7)%7;
-  for(let i=1;i<=trail;i++){const ds=fmt(new Date(cY,cM+1,i));h+=`<div class="mday other" onclick="openModal('${ds}',null)"><div class="mday-n">${i}</div></div>`;}
+  for(let i=1;i<=trail;i++){const ds=fmt(new Date(cY,cM+1,i));h+=`<div class="mday other" onclick="openDayPanel('${ds}')"><div class="mday-n">${i}</div></div>`;}
   h+='</div>';
   h+=postListHTML(false);
   document.getElementById('cal-body').innerHTML=h;
@@ -1407,7 +1600,7 @@ function renderWeek(){
 
       const safeT=tip?tip.replace(/'/g,"\\'").replace(/\n/g,'\\n'):'';
       const tipAttr=safeT?`onmouseenter="showTip(event,'${safeT}')" onmouseleave="hideTip()"`:'';
-      h+=`<div class="wg-cell heat-${score}${isT?' tod':''}" onclick="openModal('${ds}','${hr}:00')" ${tipAttr}>${inner}</div>`;
+      h+=`<div class="wg-cell heat-${score}${isT?' tod':''}" onclick="openDayPanel('${ds}','${hr}:00')" ${tipAttr}>${inner}</div>`;
     });
   });
   h+='</div></div>'; // close week-grid and week-wrap
@@ -2155,6 +2348,22 @@ function planerSelectDay(dateStr){
 }
 
 function saveEntry(){
+  // Handle edit mode (from dpEditEntry)
+  if(window._editEntryId){
+    const id=window._editEntryId;
+    window._editEntryId=null;
+    const idx=ST.entries.findIndex(x=>String(x.id)===String(id));
+    if(idx>-1){
+      ST.entries[idx].title=document.getElementById('entry-title').value.trim();
+      ST.entries[idx].note=document.getElementById('entry-note').value.trim();
+      ST.entries[idx].time=document.getElementById('entry-time').value;
+      ST.entries[idx].type=selectedEntryType;
+      saveST();
+      cloudSaveEntry(ST.entries[idx]);
+      closeModal();renderCal();renderPlanerAll();
+      return;
+    }
+  }
   const title=document.getElementById('entry-title').value.trim();
   const note=document.getElementById('entry-note').value.trim();
   const time=document.getElementById('entry-time').value;
@@ -2327,6 +2536,21 @@ function entryRow(e){
 }
 </script>
 
+
+<!-- ── DAY DETAIL PANEL ── -->
+<div class="day-panel-bg" id="day-panel-bg" onclick="closeDayPanelBg(event)">
+  <div class="day-panel" id="day-panel">
+    <div class="day-panel-header">
+      <div class="day-panel-title" id="dp-title">Montag, 1. Januar</div>
+      <button class="day-panel-close" onclick="closeDayPanel()">✕</button>
+    </div>
+    <div id="dp-content"></div>
+    <div class="day-panel-add">
+      <button class="btn btn-p btn-sm" onclick="dpAddPost()">+ Post planen</button>
+      <button class="btn btn-sm" onclick="dpAddEntry()">+ Eintrag</button>
+    </div>
+  </div>
+</div>
 <!-- ── AUTH OVERLAY ── -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
