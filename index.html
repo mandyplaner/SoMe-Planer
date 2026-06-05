@@ -25,8 +25,8 @@
   --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:17px;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+html{font-size:17px;overflow-x:hidden;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 .shell{display:grid;grid-template-columns:230px 1fr;grid-template-rows:60px 1fr;min-height:100vh;}
 .topbar{grid-column:1/-1;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;}
 .logo{font-family:var(--serif);font-size:1.3rem;letter-spacing:-.01em;}
@@ -108,7 +108,7 @@ select.inp{cursor:pointer;}
 .leg-dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
 
 /* ── WEEK (heatmap) ── */
-.week-wrap{overflow-x:auto;}
+.week-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;}
 .week-grid{display:grid;grid-template-columns:58px repeat(7,1fr);min-width:600px;}
 
 /* time-label column */
@@ -276,6 +276,30 @@ select.inp{cursor:pointer;}
 .modal-tab:hover{background:var(--bg2);}
 .modal-tab.on{background:var(--accent-l);color:var(--accent);border-color:var(--accent);font-weight:500;}
 
+
+/* ── POST CATEGORIES ── */
+.cat-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.cat-btn { padding: 5px 12px; border-radius: 20px; border: 2px solid transparent; background: none;
+  font-family: var(--sans); font-size: .82rem; cursor: pointer; transition: all .12s; font-weight: 500; }
+.cat-btn:hover { opacity: .85; }
+.cat-btn.on { color: #fff !important; }
+.cat-familie    { border-color: #3B7DD8; color: #3B7DD8; }
+.cat-familie.on    { background: #3B7DD8; }
+.cat-demokratie { border-color: #9B59B6; color: #9B59B6; }
+.cat-demokratie.on { background: #9B59B6; }
+.cat-ehrenamt   { border-color: #E67E22; color: #E67E22; }
+.cat-ehrenamt.on   { background: #E67E22; }
+.cat-senioren   { border-color: #16A085; color: #16A085; }
+.cat-senioren.on   { background: #16A085; }
+.cat-ostdeutschland { border-color: #C0392B; color: #C0392B; }
+.cat-ostdeutschland.on { background: #C0392B; }
+/* category chip in post list */
+.post-cat { font-size: .65rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; color: #fff; }
+.pc-familie     { background: #3B7DD8; }
+.pc-demokratie  { background: #9B59B6; }
+.pc-ehrenamt    { background: #E67E22; }
+.pc-senioren    { background: #16A085; }
+.pc-ostdeutschland { background: #C0392B; }
 /* ── TAGESPLANER ── */
 .etype-btn{padding:6px 13px;border-radius:20px;border:1px solid var(--border2);background:none;font-family:var(--sans);font-size:.82rem;color:var(--text2);cursor:pointer;transition:all .12s;}
 .etype-btn:hover{background:var(--bg2);}
@@ -322,6 +346,10 @@ select.inp{cursor:pointer;}
    MOBILE RESPONSIVE  (≤ 700px)
    ══════════════════════════════════════════════ */
 @media (max-width: 700px) {
+
+  /* ── Prevent horizontal scroll globally ── */
+  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+  .shell, .main, .card, .cp { max-width: 100% !important; overflow-x: hidden; }
 
   /* ── Shell: single column, bottom nav ── */
   .shell {
@@ -447,17 +475,19 @@ select.inp{cursor:pointer;}
   .auth-overlay { align-items: flex-end; padding: 0; }
   .auth-box {
     width: 100%;
+    max-width: 100vw;
     border-radius: var(--r-lg) var(--r-lg) 0 0;
     padding: 28px 20px 40px;
+    box-sizing: border-box;
   }
 
   /* ── TV table: horizontal scroll ── */
-  .tv-table-wrap { margin-bottom: 14px; }
-  .tv-table { font-size: .78rem; }
-  .tv-table th.show-head { font-size: .78rem; }
-  .tv-table td { padding: 8px 10px; }
-  .tv-cell-topic { font-size: .78rem; }
-  .tv-cell-guests { font-size: .72rem; }
+  .tv-table-wrap { margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: calc(100vw - 28px); }
+  .tv-table { font-size: .75rem; min-width: 500px; }
+  .tv-table th.show-head { font-size: .75rem; }
+  .tv-table td { padding: 7px 8px; }
+  .tv-cell-topic { font-size: .75rem; }
+  .tv-cell-guests { font-size: .7rem; }
 
   /* ── Post rows ── */
   .post-row { padding: 9px 11px; gap: 8px; }
@@ -474,9 +504,11 @@ select.inp{cursor:pointer;}
   .tag { font-size: .66rem; padding: 2px 7px; }
 
   /* ── TV workflow steps ── */
-  #tv-workflow-steps { flex-direction: column !important; }
-  #tv-workflow-steps > * { min-width: 0 !important; }
+  #tv-workflow-steps { flex-direction: column !important; gap: 10px !important; }
+  #tv-workflow-steps > * { min-width: 0 !important; width: 100% !important; }
   #tv-arrow { display: none !important; }
+  .tv-ai-bar { flex-direction: column; gap: 10px; }
+  .tv-ai-bar p { min-width: 0; }
 
   /* ── Heatmap legend ── */
   .heat-legend { gap: 6px; }
@@ -816,6 +848,16 @@ select.inp{cursor:pointer;}
           <input type="text" class="inp" id="p-anlass" placeholder="z. B. Internationaler Kindertag, Maischberger …">
         </div>
         <div class="fl">
+          <label class="lbl">Kategorie (optional)</label>
+          <div class="cat-row" id="cat-row">
+            <button class="cat-btn cat-familie"     data-c="familie"        onclick="toggleCat(this)">Familie</button>
+            <button class="cat-btn cat-demokratie"  data-c="demokratie"     onclick="toggleCat(this)">Demokratie</button>
+            <button class="cat-btn cat-ehrenamt"    data-c="ehrenamt"       onclick="toggleCat(this)">Ehrenamt</button>
+            <button class="cat-btn cat-senioren"    data-c="senioren"       onclick="toggleCat(this)">Senioren</button>
+            <button class="cat-btn cat-ostdeutschland" data-c="ostdeutschland" onclick="toggleCat(this)">Ostdeutschland</button>
+          </div>
+        </div>
+        <div class="fl">
           <label class="lbl">Post-Text</label>
           <textarea class="inp" id="p-text" rows="4" placeholder="Text des Posts …" oninput="updateChar()"></textarea>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
@@ -864,6 +906,19 @@ select.inp{cursor:pointer;}
         <div class="fl">
           <label class="lbl">Notiz / Details</label>
           <textarea class="inp" id="entry-note" rows="3" placeholder="Weitere Details, Links, Gedanken …"></textarea>
+        </div>
+        <div class="fl">
+          <label class="lbl">Wiederholen</label>
+          <select class="inp" id="entry-repeat" style="max-width:220px;">
+            <option value="">Kein — einmalig</option>
+            <option value="weekly">Wöchentlich</option>
+            <option value="biweekly">Alle 2 Wochen</option>
+            <option value="monthly">Monatlich</option>
+          </select>
+        </div>
+        <div class="fl" id="entry-repeat-end-row" style="display:none;">
+          <label class="lbl">Wiederholen bis</label>
+          <input type="date" class="inp" id="entry-repeat-end" style="max-width:200px;">
         </div>
       </div>
       <div class="modal-footer">
@@ -1158,6 +1213,7 @@ let cY=TODAY.getFullYear(),cM=TODAY.getMonth();
 let view='monat';
 let evF='alle';
 let selPlats=['Instagram'];
+let selectedCat='';
 let editId=null;
 let weekRef=new Date(TODAY);
 let weekHeatPlat='X/Twitter'; // which platform's heat to show in week view
@@ -1412,8 +1468,10 @@ function postListHTML(weekOnly,startDay,endDay){
     const d=new Date(p.date);
     const ds=(weekOnly?DL[d.getDay()]+' ':'')+d.getDate()+'.'+(d.getMonth()+1)+'. '+p.time;
     const prev=(p.anlass?'['+p.anlass+'] ':'')+p.text;
+    const catChip=p.category?`<span class="post-cat pc-${p.category}">${p.category.charAt(0).toUpperCase()+p.category.slice(1)}</span>`:'';
     return `<div class="post-row">
       <span class="pplat" style="${platBg(p.platform)}">${platShort(p.platform)}</span>
+      ${catChip}
       <span class="ptext">${prev}</span>
       <span class="pwhen">${ds}</span>
       <button class="pdel" onclick="editPost(${p.id},event)" title="Bearbeiten">✎</button>
@@ -1437,9 +1495,14 @@ function openModal(dateStr,timeStr,tab){
   document.getElementById('entry-title').value='';
   document.getElementById('entry-note').value='';
   document.getElementById('entry-time').value='';
+  document.getElementById('entry-repeat').value='';
+  const rer=document.getElementById('entry-repeat-end-row');
+  if(rer)rer.style.display='none';
   updateChar();
   selPlats=['Instagram'];
   document.querySelectorAll('.pt').forEach(b=>b.classList.toggle('on',b.dataset.p==='Instagram'));
+  selectedCat='';
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
   updateBestTimeTip();
   // Show date in modal header
   const d=new Date(ds);
@@ -1448,6 +1511,14 @@ function openModal(dateStr,timeStr,tab){
   switchModalTab(tab||'post');
   document.getElementById('modal-bg').classList.add('open');
 }
+
+// Show repeat-end row when repeat is chosen
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id==='entry-repeat'){
+    const row=document.getElementById('entry-repeat-end-row');
+    if(row) row.style.display = e.target.value ? 'flex' : 'none';
+  }
+});
 
 function switchModalTab(tab){
   document.getElementById('modal-post-tab').style.display=tab==='post'?'block':'none';
@@ -1474,6 +1545,8 @@ function editPost(id,e){
   document.getElementById('p-tags').value=p.tags||'';
   selPlats=[p.platform];
   document.querySelectorAll('.pt').forEach(b=>b.classList.toggle('on',b.dataset.p===p.platform));
+  selectedCat=p.category||'';
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('on',b.dataset.c===selectedCat));
   updateChar();
   document.getElementById('p-hint').style.display='none';
   updateBestTimeTip();
@@ -1531,6 +1604,18 @@ function updateBestTimeTip(){
   tip.style.display='block';
 }
 
+function toggleCat(btn){
+  const c=btn.dataset.c;
+  if(selectedCat===c){
+    // deselect
+    selectedCat='';
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
+  } else {
+    selectedCat=c;
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('on',b.dataset.c===c));
+  }
+}
+
 function updateChar(){
   const t=document.getElementById('p-text').value;
   const h=document.getElementById('char-hint');
@@ -1547,9 +1632,9 @@ function savePost(){
   if(!selPlats.length){alert('Bitte mindestens eine Plattform wählen.');return;}
   if(editId!==null){
     const i=ST.posts.findIndex(p=>p.id===editId);
-    if(i>-1)ST.posts[i]={...ST.posts[i],date,time,text,anlass,tags,platform:selPlats[0]};
+    if(i>-1)ST.posts[i]={...ST.posts[i],date,time,text,anlass,tags,platform:selPlats[0],category:selectedCat};
   }else{
-    selPlats.forEach(p=>ST.posts.push({id:Date.now()+Math.random(),platform:p,date,time,text,anlass,tags}));
+    selPlats.forEach(p=>ST.posts.push({id:Date.now()+Math.random(),platform:p,date,time,text,anlass,tags,category:selectedCat}));
   }
   saveST();closeModal();renderCal();updateBadges();
   // cloud sync
@@ -2075,24 +2160,46 @@ function saveEntry(){
   const time=document.getElementById('entry-time').value;
   if(!title){alert('Bitte einen Titel eingeben.');return;}
   const entryDate=document.getElementById('entry-date').value||fmt(TODAY);
-  ST.entries.push({
-    id:Date.now()+Math.random(),
-    date:entryDate,
-    type:selectedEntryType,
-    title,note,time,
-    done:false,
+  const repeatMode=document.getElementById('entry-repeat').value;
+  const repeatEndVal=document.getElementById('entry-repeat-end').value;
+
+  const dates=[];
+  if(!repeatMode){
+    dates.push(entryDate);
+  } else {
+    let cur=new Date(entryDate);
+    let endDt=repeatEndVal?new Date(repeatEndVal):new Date(entryDate);
+    if(!repeatEndVal){endDt=new Date(entryDate);endDt.setMonth(endDt.getMonth()+3);}
+    let safety=0;
+    while(cur<=endDt&&safety<60){
+      dates.push(fmt(cur));
+      if(repeatMode==='weekly')cur.setDate(cur.getDate()+7);
+      else if(repeatMode==='biweekly')cur.setDate(cur.getDate()+14);
+      else if(repeatMode==='monthly')cur.setMonth(cur.getMonth()+1);
+      safety++;
+    }
+  }
+
+  const newEntries=[];
+  dates.forEach(d=>{
+    const e={id:Date.now()+Math.random(),date:d,type:selectedEntryType,title,note,time,done:false,repeat:repeatMode||null};
+    ST.entries.push(e);
+    newEntries.push(e);
   });
+
   saveST();
   document.getElementById('entry-title').value='';
   document.getElementById('entry-note').value='';
   document.getElementById('entry-time').value='';
+  document.getElementById('entry-repeat').value='';
+  const rer=document.getElementById('entry-repeat-end-row');
+  if(rer)rer.style.display='none';
   closeModal();
   renderCal();
   renderPlanerAll();
   updateBadges();
-  const newEntry=ST.entries[ST.entries.length-1];
-  showSync('Speichere Eintrag…');
-  cloudSaveEntry(newEntry).then(()=>hideSync());
+  showSync(dates.length>1?`Speichere ${dates.length} Einträge…`:'Speichere Eintrag…');
+  Promise.all(newEntries.map(e=>cloudSaveEntry(e))).then(()=>hideSync());
 }
 
 function toggleEntryDone(id){
@@ -2133,7 +2240,7 @@ function renderPlanerDay(){
       <div class="entry-body">
         <div class="entry-title">${e.title}</div>
         ${e.note?`<div class="entry-note">${e.note}</div>`:''}
-        <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}</div>
+        <div class="entry-meta">${ENTRY_LABELS[e.type]||e.type}${e.time?' · '+e.time+' Uhr':''}${e.repeat?' 🔁':''}</div>
       </div>
       <div class="entry-actions">
         ${e.type==='aufgabe'?`<button class="btn btn-sm" style="color:${e.done?'var(--accent)':'var(--text3)'};border-color:${e.done?'var(--accent)':'var(--border2)'};" onclick="toggleEntryDone(${eid})">${e.done?'↩ Offen':'✓ Erledigt'}</button>`:''}
