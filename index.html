@@ -1047,7 +1047,7 @@ function renderDayPanel() {
     h += '<div class="day-panel-section">Einträge</div>';
     entries.forEach(e => {
       const eid = typeof e.id==='string' ? "'"+e.id+"'" : e.id;
-      const repeatGroup = e.repeat ? ST.entries.filter(x => x.title===e.title && x.type===e.type && x.repeat===e.repeat) : [];
+      const _rep=e.repeat||null; const repeatGroup = _rep ? ST.entries.filter(x => (x.repeat||null)===_rep && x.title.trim()===e.title.trim() && x.type===e.type) : [];
       const hasGroup = repeatGroup.length > 1;
       h += '<div class="dp-card'+(e.done?' done-card':'')+'">' +
         '<div class="dp-icon">'+(ENTRY_ICONS[e.type]||'📝')+'</div>' +
@@ -1112,9 +1112,10 @@ function dpDeleteEntry(id, hasGroup) {
     } else {
       const e = ST.entries.find(x => String(x.id) === String(id));
       if (e) {
-        const group = ST.entries.filter(x => x.title===e.title && x.type===e.type && x.repeat===e.repeat);
+        const rep=e.repeat||null;
+        const group = ST.entries.filter(x => (x.repeat||null)===rep && x.title.trim()===e.title.trim() && x.type===e.type);
         group.forEach(x => cloudDeleteEntry(x.id));
-        ST.entries = ST.entries.filter(x => !(x.title===e.title && x.type===e.type && x.repeat===e.repeat));
+        ST.entries = ST.entries.filter(x => !((x.repeat||null)===rep && x.title.trim()===e.title.trim() && x.type===e.type));
       }
     }
   } else {
@@ -1238,7 +1239,8 @@ async function cloudLoad() {
   }));
   ST.entries = (entriesRes.data || []).map(r => ({
     id: r.id, type: r.type, date: r.date, title: r.title,
-    note: r.note, time: r.time, done: r.done,
+    note: r.note||'', time: r.time||'', done: r.done||false,
+    repeat: r.repeat||null,
   }));
   saveST(); // keep local cache in sync
   hideSync();
@@ -1288,6 +1290,7 @@ async function cloudSaveEntry(entry) {
     user_id: currentUser.id,
     type: entry.type, date: entry.date, title: entry.title,
     note: entry.note||'', time: entry.time||'', done: entry.done||false,
+    repeat: entry.repeat||null,
   }, { onConflict: 'id' }).select().single();
   if (!error && data) entry.id = data.id;
   saveST();
@@ -1705,7 +1708,7 @@ function openModal(dateStr,timeStr,tab){
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
   updateBestTimeTip();
   // Show date in modal header
-  const d=new Date(ds);
+  const d=parseDate(ds);
   document.getElementById('modal-date-label').textContent=
     DL[d.getDay()]+', '+d.getDate()+'. '+ML[d.getMonth()]+' '+d.getFullYear();
   switchModalTab(tab||'post');
@@ -1924,7 +1927,7 @@ function renderTV(){
 
   // Collect all unique dates across all entries, sorted
   let allDates=[...new Set(ST.tv.map(t=>t.date))].sort();
-  if(!showPast) allDates=allDates.filter(d=>new Date(d)>=now);
+  if(!showPast) allDates=allDates.filter(d=>parseDate(d)>=now);
 
   // Build lookup: date → show → entry
   const lookup={};
@@ -1957,8 +1960,8 @@ function renderTV(){
   // Body rows
   h+='<tbody>';
   allDates.forEach(dateStr=>{
-    const d=new Date(dateStr);
-    const isPast=new Date(dateStr)<now;
+    const d=parseDate(dateStr);
+    const isPast=parseDate(dateStr)<now;
     const isToday=d.toDateString()===TODAY.toDateString();
     const isThisWeek=d>=now&&d<=new Date(now.getTime()+7*86400000);
     const dowLabel=DL[d.getDay()];
@@ -2349,7 +2352,7 @@ function planerCalNav(dir){
 }
 
 function planerSelectDay(dateStr){
-  planerDate=new Date(dateStr);
+  planerDate=parseDate(dateStr);
   renderPlanerDay();
   renderPlanerMiniCal();
 }
@@ -2515,11 +2518,14 @@ function renderPlanerAll(){
     const seen=new Set();
     const result=[];
     list.forEach(e=>{
-      if(!e.repeat){result.push({entry:e,count:0});return;}
-      const key=e.title+'|'+e.type+'|'+e.repeat;
-      if(seen.has(key))return;
+      const rep=e.repeat||null;
+      if(!rep){result.push({entry:e,count:0});return;}
+      // Use title+type+repeat as group key
+      const key=e.title.trim()+'||'+e.type+'||'+rep;
+      if(seen.has(key))return; // already added first of this series
       seen.add(key);
-      const total=ST.entries.filter(x=>x.title===e.title&&x.type===e.type&&x.repeat===e.repeat).length;
+      // Count ALL entries in this series (past + future)
+      const total=ST.entries.filter(x=>(x.repeat||null)===rep&&x.title.trim()===e.title.trim()&&x.type===e.type).length;
       result.push({entry:e,count:total});
     });
     return result;
