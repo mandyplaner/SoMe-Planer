@@ -657,10 +657,7 @@ select.inp{cursor:pointer;}
             <span style="display:inline-block;width:3px;height:14px;background:#8E44AD;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Maybrit Illner
             <span class="show-channel">ZDF · Do ~22:15</span>
           </th>
-          <th class="show-head">
-            <span style="display:inline-block;width:3px;height:14px;background:#16A085;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>Dunja Hayali
-            <span class="show-channel">ZDF · Sa ~23:00</span>
-          </th>
+
           <th class="show-head">
             <span style="display:inline-block;width:3px;height:14px;background:#D35400;border-radius:2px;vertical-align:middle;margin-right:6px;"></span>phoenix runde
             <span class="show-channel">Phoenix · Do ~22:15</span>
@@ -703,7 +700,7 @@ select.inp{cursor:pointer;}
           <select class="inp" id="tv-show">
             <option>Maischberger</option><option>Hart aber fair</option>
             <option>Markus Lanz</option><option>Maybrit Illner</option>
-            <option>Dunja Hayali</option><option>phoenix runde</option><option>Sonstige</option>
+            <option>phoenix runde</option><option>Sonstige</option>
           </select>
         </div>
         <div class="fl"><label class="lbl">Datum</label><input type="date" class="inp" id="tv-date"></div>
@@ -1597,7 +1594,7 @@ function renderHeatEditor(){
 
 // ── TV ──────────────────────────────────────────────────────────────────────
 function tvSearch(show){window.open('https://www.google.com/search?q='+encodeURIComponent(show+' nächste Sendung Thema '+new Date().getFullYear()),'_blank');}
-function tvSearchAll(){window.open('https://www.google.com/search?q='+encodeURIComponent('(Maischberger OR "Hart aber fair" OR "Markus Lanz" OR "Maybrit Illner" OR "Dunja Hayali" OR "phoenix runde") nächste Sendung'),'_blank');}
+function tvSearchAll(){window.open('https://www.google.com/search?q='+encodeURIComponent('(Maischberger OR "Hart aber fair" OR "Markus Lanz" OR "Maybrit Illner" OR "phoenix runde") nächste Sendung'),'_blank');}
 
 function addTV(){
   const show=document.getElementById('tv-show').value;
@@ -1619,13 +1616,12 @@ function addTV(){
 function deleteTV(id){ST.tv=ST.tv.filter(t=>t.id!==id);saveST();renderTV();renderCal();updateBadges();}
 
 // ── TV TABLE RENDERER ───────────────────────────────────────────────────────
-const SHOWS_ORDER=['Maischberger','Hart aber fair','Markus Lanz','Maybrit Illner','Dunja Hayali','phoenix runde'];
+const SHOWS_ORDER=['Maischberger','Hart aber fair','Markus Lanz','Maybrit Illner','phoenix runde'];
 const SHOW_META={
   'Maischberger':    {channel:'ARD',  color:'#C0392B'},
   'Hart aber fair':  {channel:'ARD',  color:'#E67E22'},
   'Markus Lanz':     {channel:'ZDF',  color:'#2980B9'},
   'Maybrit Illner':  {channel:'ZDF',  color:'#8E44AD'},
-  'Dunja Hayali':    {channel:'ZDF',  color:'#16A085'},
   'phoenix runde':   {channel:'Phoenix', color:'#D35400'},
 };
 
@@ -1858,15 +1854,20 @@ function clearData(){
 function openClaudeSearch(e){
   e.preventDefault();
   const today=fmt(new Date());
-  const query=`Suche gründlich nach den nächsten Sendeterminen für diese 6 Talkshows in den nächsten 14 Tagen (ab ${today}): Maischberger (ARD), Hart aber fair (ARD), Markus Lanz (ZDF), Maybrit Illner (ZDF), Dunja Hayali (ZDF), phoenix runde.
+  // Calculate tomorrow's date for the 2-day window
+  const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
+  const dayAfter=new Date();dayAfter.setDate(dayAfter.getDate()+2);
+  const tomorrowStr=fmt(tomorrow);
+  const dayAfterStr=fmt(dayAfter);
+  const query=`Suche nach den Sendeterminen für heute (${today}), morgen (${tomorrowStr}) und übermorgen (${dayAfterStr}) für diese Talkshows: Maischberger (ARD), Hart aber fair (ARD), Markus Lanz (ZDF), Maybrit Illner (ZDF), phoenix runde.
 
-Recherchiere für jede Sendung: exaktes Datum, Uhrzeit, vollständiges Thema und ALLE angekündigten Gäste mit vollem Namen und Funktion/Partei. Suche auch auf den jeweiligen Senderwebseiten (daserste.de, zdf.de, phoenix.de) und aktuellen Nachrichtenquellen.
+Recherchiere für jede Sendung: exaktes Datum, Uhrzeit, vollständiges Thema und ALLE angekündigten Gäste mit vollem Namen und Funktion/Partei. Suche auf daserste.de, zdf.de, phoenix.de und aktuellen Nachrichtenquellen.
 
 Gib das Ergebnis ausschließlich als JSON-Array aus — keine Einleitung, kein Text davor oder danach, keine Markdown-Backticks, nur das Array:
 
 [{"show":"Sendungsname","channel":"Sender","date":"JJJJ-MM-TT","time":"HH:MM","topic":"Vollständiges Thema der Sendung","guests":"Vorname Nachname (Partei/Funktion), Vorname Nachname (Funktion)","tags":["familie"],"relevant":true}]
 
-Erlaubte Tags: familie, kinder, soziales, bildung, frauen, senioren, ostdeutschland. Setze relevant=true wenn das Thema für Familien-, Sozial- oder Seniorenpolitik relevant ist. Fülle alle Felder so vollständig wie möglich aus — bei unbekannten Gästen schreibe "noch nicht bekannt", lasse das Feld aber niemals leer.`;
+Erlaubte Tags: familie, kinder, soziales, bildung, frauen, senioren, ostdeutschland. relevant=true wenn familienpolitisch relevant. Bei unbekannten Gästen schreibe "noch nicht bekannt".`;
   const url='https://claude.ai/new?q='+encodeURIComponent(query);
   window.open(url,'_blank');
 }
