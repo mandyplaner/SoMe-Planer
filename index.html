@@ -1959,12 +1959,12 @@ function renderTV(){
     return;
   }
 
-  // Collect all unique dates — show only up to yesterday (no today, no future)
-  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1); yesterday.setHours(23,59,59,0);
+  // Collect all unique dates — show from yesterday onwards
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1); yesterday.setHours(0,0,0,0);
   let allDates=[...new Set(ST.tv.map(t=>t.date))].sort();
-  allDates=allDates.filter(d=>parseDate(d)<=yesterday);
+  allDates=allDates.filter(d=>parseDate(d)>=yesterday);
   if(!allDates.length){
-    container.innerHTML='<div class="empty">Keine vergangenen Sendungen vorhanden.</div>';
+    container.innerHTML='<div class="empty">Keine Sendungen eingetragen. Nutze die Suche oben.</div>';
     updateBadges(); return;
   }
 
