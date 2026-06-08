@@ -743,9 +743,7 @@ select.inp{cursor:pointer;}
           <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
             <a href="https://www.zdf.de/politik/maybrit-illner" target="_blank" class="tv-site-link">zdf.de →</a>
           </td>
-          <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
-            <a href="https://www.zdf.de/serien/dunja-hayali" target="_blank" class="tv-site-link">zdf.de →</a>
-          </td>
+
           <td style="background:var(--bg2);border:1px solid var(--border);padding:7px 10px;">
             <a href="https://www.phoenix.de/sendungen/gespraeche/phoenix-runde-104.html" target="_blank" class="tv-site-link">phoenix.de →</a>
           </td>
@@ -1898,7 +1896,8 @@ function addTV(){
   const channel=document.getElementById('tv-channel').value.trim();
   const tags=document.getElementById('tv-tags').value.trim().split(/[,\s]+/).filter(Boolean);
   if(!date||!topic){alert('Bitte Datum und Thema ausfüllen.');return;}
-  ST.tv.push({id:Date.now(),show,date,time,topic,guests,channel,tags});saveST();
+  const normShow=normaliseShow(show)||show;
+  ST.tv.push({id:Date.now(),show:normShow,date,time,topic,guests,channel,tags});saveST();
   document.getElementById('tv-topic').value='';
   document.getElementById('tv-guests').value='';
   document.getElementById('tv-channel').value='';
@@ -1909,6 +1908,36 @@ function addTV(){
 function deleteTV(id){ST.tv=ST.tv.filter(t=>t.id!==id);saveST();renderTV();renderCal();updateBadges();}
 
 // ── TV TABLE RENDERER ───────────────────────────────────────────────────────
+
+// Normalise show names from JSON import to canonical names
+const SHOW_ALIASES = {
+  'maischberger':   'Maischberger',
+  'hart aber fair': 'Hart aber fair',
+  'hartaberfair':   'Hart aber fair',
+  'markus lanz':    'Markus Lanz',
+  'lanz':           'Markus Lanz',
+  'maybrit illner': 'Maybrit Illner',
+  'illner':         'Maybrit Illner',
+  'phoenix runde':  'phoenix runde',
+  'phoenix':        'phoenix runde',
+  'dunja hayali':   null,  // removed — discard
+  'dunya hayali':   null,
+  'hayali':         null,
+};
+
+function normaliseShow(name) {
+  if (!name) return null;
+  const key = name.trim().toLowerCase();
+  if (key in SHOW_ALIASES) return SHOW_ALIASES[key];
+  // Check if it starts with a known show name
+  for (const alias in SHOW_ALIASES) {
+    if (key.startsWith(alias) || alias.startsWith(key)) return SHOW_ALIASES[alias];
+  }
+  // Check canonical list directly
+  const canonical = SHOWS_ORDER.find(s => s.toLowerCase() === key);
+  if (canonical) return canonical;
+  return null; // unknown show — discard
+}
 const SHOWS_ORDER=['Maischberger','Hart aber fair','Markus Lanz','Maybrit Illner','phoenix runde'];
 const SHOW_META={
   'Maischberger':    {channel:'ARD',  color:'#C0392B'},
@@ -1930,9 +1959,14 @@ function renderTV(){
     return;
   }
 
-  // Collect all unique dates across all entries, sorted
+  // Collect all unique dates — show only up to yesterday (no today, no future)
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1); yesterday.setHours(23,59,59,0);
   let allDates=[...new Set(ST.tv.map(t=>t.date))].sort();
-  if(!showPast) allDates=allDates.filter(d=>parseDate(d)>=now);
+  allDates=allDates.filter(d=>parseDate(d)<=yesterday);
+  if(!allDates.length){
+    container.innerHTML='<div class="empty">Keine vergangenen Sendungen vorhanden.</div>';
+    updateBadges(); return;
+  }
 
   // Build lookup: date → show → entry
   const lookup={};
@@ -1942,11 +1976,8 @@ function renderTV(){
     lookup[t.date][t.show].push(t);
   });
 
-  // Which shows actually have data?
-  const activeShows=SHOWS_ORDER.filter(s=>ST.tv.some(t=>t.show===s));
-  // Also include any "Sonstige" entries
-  const otherShows=[...new Set(ST.tv.map(t=>t.show).filter(s=>!SHOWS_ORDER.includes(s)))];
-  const cols=[...activeShows,...otherShows];
+  // Only show columns from SHOWS_ORDER that have data — never append unknown shows
+  const cols=SHOWS_ORDER.filter(s=>ST.tv.some(t=>t.show===s));
 
   let h='<div class="tv-table-wrap"><table class="tv-table">';
 
@@ -2186,12 +2217,15 @@ function importFromJSON(){
   let added=0, skipped=0;
   shows.forEach(s=>{
     if(!s.show||!s.date){skipped++;return;}
+    // Normalise show name
+    const canonicalShow = normaliseShow(s.show);
+    if(!canonicalShow){skipped++;return;} // unknown or removed show
     // Avoid duplicates: same show + same date
-    const exists=ST.tv.some(t=>t.show===s.show&&t.date===s.date);
+    const exists=ST.tv.some(t=>t.show===canonicalShow&&t.date===s.date);
     if(exists){skipped++;return;}
     ST.tv.push({
       id: Date.now()+Math.random(),
-      show:    s.show    ||'',
+      show:    canonicalShow,
       channel: s.channel ||'',
       date:    s.date    ||'',
       time:    s.time    ||'',
